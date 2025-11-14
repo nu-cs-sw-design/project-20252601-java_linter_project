@@ -1,4 +1,4 @@
-package example;
+package exampleLinter;
 
 import java.io.IOException;
 import java.util.List;
