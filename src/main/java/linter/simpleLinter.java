@@ -1,10 +1,30 @@
 package linter;
 import java.io.IOException;
+import java.util.List;
+
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.Type;
 
 public class simpleLinter {
     public static void main(String[] args) throws IOException {
         for (String className : args) {
-            System.out.println("Linting class: " + className);
+            ClassReader reader = new ClassReader(className);
+            ClassNode classNode = new ClassNode();
+            reader.accept(classNode, ClassReader.EXPAND_FRAMES);
+            List<MethodNode> methods = classNode.methods;
+            for (MethodNode method : methods) {
+                tooManyArgumentsMethodCheck(method);
+            }
         }
     }
+
+    private static void tooManyArgumentsMethodCheck(MethodNode method) {
+        Type[] argTypes = Type.getArgumentTypes(method.desc);
+        if (argTypes.length > 3) {
+            System.out.println("Warning: Method " + method.name + " has too many arguments: " + argTypes.length);
+        }
+    }
+
 }

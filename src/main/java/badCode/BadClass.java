@@ -14,4 +14,8 @@ public class BadClass {
         int z = X + Y;
         System.out.println(z);
     }
+
+    void tooManyArgumentsMethod(int a, int b, int c, int d, int e, int f) {
+        System.out.println(a + b + c + d + e + f);
+    }
 }
