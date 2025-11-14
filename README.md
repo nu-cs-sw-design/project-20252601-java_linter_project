@@ -1,7 +1,7 @@
-# Project: NAME
+# Project: Custom Java Linter
 
 ## Contributors
-NAME, NAME, NAME
+Dev Shah, Vihaan Shah
 
 ## Dependencies
 - LANGUAGE AND VERSION
