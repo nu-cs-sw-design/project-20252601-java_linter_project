@@ -17,8 +17,15 @@ Dev Shah, Vihaan Shah
 
 ## Run Instructions
 Pass fully-qualified class names to the linter:
+
+*Unix*
 ```bash
 ./gradlew run --args="badcode.BadClass"
+```
+
+*Windows*
+```cmd
+gradlew.bat run --args="badcode.BadClass"
 ```
 
 ## Project Structure
