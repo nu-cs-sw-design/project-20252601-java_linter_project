@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.Type;
 
@@ -17,6 +18,11 @@ public class simpleLinter {
             for (MethodNode method : methods) {
                 tooManyArgumentsMethodCheck(method);
             }
+
+            List<FieldNode> fields = classNode.fields;
+            for (FieldNode field : fields) {
+                publicAndNotFinalFieldCheck(field);
+            }
         }
     }
 
@@ -26,5 +32,14 @@ public class simpleLinter {
             System.out.println("Warning: Method " + method.name + " has too many arguments: " + argTypes.length);
         }
     }
+
+    private static void publicAndNotFinalFieldCheck(FieldNode field) {
+        boolean isPublic = (field.access & org.objectweb.asm.Opcodes.ACC_PUBLIC) != 0;
+        boolean isFinal = (field.access & org.objectweb.asm.Opcodes.ACC_FINAL) != 0;
+        if (isPublic && !isFinal) {
+            System.out.println("Warning: Field " + field.name + " is public and not final.");
+        }
+    }
+
 
 }
