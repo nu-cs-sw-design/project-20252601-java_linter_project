@@ -9,7 +9,8 @@ repositories {
 
 apply plugin : "java"
 ext {
-    javaMainClass = "exampleLinter.MyFirstLinter"
+    // javaMainClass = "exampleLinter.MyFirstLinter"
+    javaMainClass = "linter.simpleLinter"
 }
 
 application {
