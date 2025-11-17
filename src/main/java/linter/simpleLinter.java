@@ -24,7 +24,7 @@ public class simpleLinter {
     static final boolean shouldCheckTooManyArguments = false;
     static final boolean shouldCheckMethodNameAppropriatenessWithLLM = false;
     static final boolean shouldCheckPublicAndNotFinalFields = false;
-    static final boolean shouldCheckUnusedPrivateMethods = false;
+    static final boolean shouldCheckUnusedPrivateMethods = true;
 
     public static void main(String[] args) throws IOException {        
         for (String className : args) {

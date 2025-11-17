@@ -20,10 +20,14 @@ public class BadClass {
     }
 
     int addNumbers(int a, int b) {
-        return a + b;
+        return a + b + usedPrivateMethod();
+    }
+
+    private int usedPrivateMethod() {
+        return 42;
     }
 
     private int unusedPrivateMethod() {
-        return 42;
+        return 0;
     }
 }
