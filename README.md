@@ -6,7 +6,8 @@ Dev Shah, Vihaan Shah
 ## Dependencies
 - Java 21+
 - Gradle 8+
-- ASM 9.6 (`asm`, `asm-tree`, `asm-analysis`)
+- ASM 9.6 (`asm`, `asm-tree`, `asm-analysis`, `asm-util`)
+- OpenAI-java 4.8
 
 ## Build Instructions
 ```bash
@@ -28,7 +29,8 @@ gradlew.bat run --args="badcode.BadClass"
 ```
 
 ## Project Structure
-- `exampleLinter/` — linter source code
+- `exampleLinter/` — linter starter code
+- `linter/` — linter code
 - `badCode/` — test classes with intentionally bad patterns
 
 ## Linter Checks
