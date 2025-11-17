@@ -21,6 +21,11 @@ import org.objectweb.asm.util.TraceMethodVisitor;
 
 public class simpleLinter {
     static final boolean verbose = false;
+    static final boolean shouldCheckTooManyArguments = false;
+    static final boolean shouldCheckMethodNameAppropriatenessWithLLM = false;
+    static final boolean shouldCheckPublicAndNotFinalFields = false;
+    static final boolean shouldCheckUnusedPrivateMethods = false;
+
     public static void main(String[] args) throws IOException {        
         for (String className : args) {
             ClassReader reader = new ClassReader(className);
@@ -29,17 +34,17 @@ public class simpleLinter {
             System.out.println("\n=== Analyzing class: " + className + " ===\n");
             List<MethodNode> methods = classNode.methods;
             for (MethodNode method : methods) {
-                tooManyArgumentsMethodCheck(method);
-                checkMethodNameAppropriatenessWithLLM(method);
+                if(shouldCheckTooManyArguments) tooManyArgumentsMethodCheck(method);
+                if(shouldCheckMethodNameAppropriatenessWithLLM) checkMethodNameAppropriatenessWithLLM(method);
                 boolean isPrivate = (method.access & Opcodes.ACC_PRIVATE) != 0;
                 if (isPrivate) {
-                    isPrivateMethodUnused(methods, method);
+                    if(shouldCheckUnusedPrivateMethods) isPrivateMethodUnused(methods, method);
                 }
             }
 
             List<FieldNode> fields = classNode.fields;
             for (FieldNode field : fields) {
-                publicAndNotFinalFieldCheck(field);
+                if(shouldCheckPublicAndNotFinalFields) publicAndNotFinalFieldCheck(field);
             }
         }
     }
