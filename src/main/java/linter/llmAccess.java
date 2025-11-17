@@ -9,6 +9,7 @@ import com.openai.models.responses.ResponseCreateParams;
 public class llmAccess {
     private static llmAccess me;
     private static OpenAIClient client;
+    private static boolean verbose = false;
 
     private String readApiKeyFromFile() {
         try {
@@ -26,10 +27,11 @@ public class llmAccess {
             .build();
     }
 
-    public static llmAccess getInstance() {
+    public static llmAccess getInstance(boolean verbose_mode) {
         if(me == null){
             me = new llmAccess();
         }
+        verbose = verbose_mode;
         return me;
     }
 
@@ -51,15 +53,21 @@ public class llmAccess {
                 var outputText = content.outputText();
                 if (outputText.isPresent()) {
                     String text = outputText.get().text();
-                    System.out.println("=== EXTRACTED TEXT ===");
-                    System.out.println(text);
+                    if (verbose) {
+                        System.out.println("=== EXTRACTED TEXT ===");
+                        System.out.println(text);
+                    }
                     return text;
                 }
             }
-            System.out.println("No text content found in message");
+            if (verbose) {
+                System.out.println("No text content found in message");
+            }
             return null;
         } else {
-            System.out.println("No message present in response");
+            if (verbose) {
+                System.out.println("No message present in response");
+            }
             return null;
         }
     }
