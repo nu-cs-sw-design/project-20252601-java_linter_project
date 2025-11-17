@@ -2,6 +2,8 @@ package exampleLinter;
 
 import java.io.IOException;
 import java.util.List;
+import java.io.StringWriter;
+import java.io.PrintWriter;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
@@ -13,6 +15,10 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
+import org.objectweb.asm.util.Printer;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceMethodVisitor;
+
 
 // REF: https://github.com/nu-cs-sw-design/project-asm-example-code-20252601-VihaanShah26/
 // FIXME: this code has TERRIBLE DESIGN all around
@@ -122,6 +128,14 @@ public class MyFirstLinter {
 
             // We don't know immediately what kind of instruction we have.
             AbstractInsnNode insn = instructions.get(i);
+
+            System.out.println("		Instruction: " + insn);
+            Printer printer = new Textifier();
+            TraceMethodVisitor mv = new TraceMethodVisitor(printer);
+            insn.accept(mv);
+            StringWriter sw = new StringWriter();
+            printer.print(new PrintWriter(sw));
+            System.out.println(sw.toString());
 
             // FIXME: Is instanceof the best way to deal with the instruction's type?
             if (insn instanceof MethodInsnNode) {

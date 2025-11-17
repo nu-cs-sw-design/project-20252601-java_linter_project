@@ -9,8 +9,8 @@ repositories {
 
 apply plugin : "java"
 ext {
-    // javaMainClass = "exampleLinter.MyFirstLinter"
-    javaMainClass = "linter.simpleLinter"
+    javaMainClass = "exampleLinter.MyFirstLinter"
+    // javaMainClass = "linter.simpleLinter"
 }
 
 application {
@@ -35,6 +35,7 @@ dependencies {
     implementation 'org.ow2.asm:asm:9.6'
     implementation 'org.ow2.asm:asm-tree:9.6'
     implementation 'org.ow2.asm:asm-analysis:9.6'
+    implementation 'org.ow2.asm:asm-util:9.6'
 
     // OpenAI API dependencies
     implementation("com.openai:openai-java:4.8.0")
