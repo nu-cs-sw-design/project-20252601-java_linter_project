@@ -33,13 +33,35 @@ public class llmAccess {
         return me;
     }
 
-    public static void getResponse(String msg) {
+    public static String getResponse(String msg) {
         ResponseCreateParams params = ResponseCreateParams.builder()
                 .input(msg)
                 .model(ChatModel.GPT_4_1)
                 .build();
         Response response = client.responses().create(params);
-        System.out.println(response);
+        var msgOpt = response.output().get(0).message();
+        
+        // Check if message is present and extract it
+        if (msgOpt.isPresent()) {
+            var message = msgOpt.get();
+            
+            // Extract the text from the content
+            if (!message.content().isEmpty()) {
+                var content = message.content().get(0);
+                var outputText = content.outputText();
+                if (outputText.isPresent()) {
+                    String text = outputText.get().text();
+                    System.out.println("=== EXTRACTED TEXT ===");
+                    System.out.println(text);
+                    return text;
+                }
+            }
+            System.out.println("No text content found in message");
+            return null;
+        } else {
+            System.out.println("No message present in response");
+            return null;
+        }
     }
 
 }
