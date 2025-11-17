@@ -5,11 +5,15 @@ import java.io.StringWriter;
 import java.util.List;
 
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LocalVariableNode;
+import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.util.Printer;
 import org.objectweb.asm.util.Textifier;
@@ -27,6 +31,10 @@ public class simpleLinter {
             for (MethodNode method : methods) {
                 tooManyArgumentsMethodCheck(method);
                 checkMethodNameAppropriatenessWithLLM(method);
+                boolean isPrivate = (method.access & Opcodes.ACC_PRIVATE) != 0;
+                if (isPrivate) {
+                    isPrivateMethodUnused(methods, method);
+                }
             }
 
             List<FieldNode> fields = classNode.fields;
@@ -48,6 +56,29 @@ public class simpleLinter {
         boolean isFinal = (field.access & org.objectweb.asm.Opcodes.ACC_FINAL) != 0;
         if (isPublic && !isFinal) {
             System.out.println("Warning: Field " + field.name + " is public and not final.");
+        }
+    }
+
+    private static void isPrivateMethodUnused(List<MethodNode> methods, MethodNode method) {
+        boolean isUsed = false;
+        for (MethodNode otherMethod : methods) {
+            if (otherMethod != method) {
+                InsnList instructions = otherMethod.instructions;
+                for (int i = 0; i < instructions.size(); i++) {
+                    AbstractInsnNode insn = instructions.get(i);
+                    if (insn instanceof MethodInsnNode) {
+                        MethodInsnNode methodInsn = (MethodInsnNode) insn;
+                        if (methodInsn.name.equals(method.name) && methodInsn.desc.equals(method.desc)) {
+                            isUsed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (isUsed) break;
+        }
+        if (!isUsed) {
+            System.out.println("Warning: Private method " + method.name + " is never used.");
         }
     }
     

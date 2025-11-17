@@ -22,4 +22,8 @@ public class BadClass {
     int addNumbers(int a, int b) {
         return a + b;
     }
+
+    private int unusedPrivateMethod() {
+        return 42;
+    }
 }
