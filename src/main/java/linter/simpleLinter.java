@@ -10,6 +10,7 @@ import org.objectweb.asm.Type;
 
 public class simpleLinter {
     public static void main(String[] args) throws IOException {
+        llmAccess.getInstance().getResponse("What is 2 + 2?");
         for (String className : args) {
             ClassReader reader = new ClassReader(className);
             ClassNode classNode = new ClassNode();
