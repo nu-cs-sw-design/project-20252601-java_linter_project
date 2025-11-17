@@ -10,6 +10,7 @@ Dev Shah, Vihaan Shah
 
 ## Build Instructions
 ```bash
+./gradlew dependencies
 ./gradlew build
 ```
 
@@ -29,3 +30,11 @@ gradlew.bat run --args="badcode.BadClass"
 ## Project Structure
 - `exampleLinter/` — linter source code
 - `badCode/` — test classes with intentionally bad patterns
+
+## Linter Checks
+- [x] Too many method arguments
+- [x] Method name appropriateness (via LLM)
+- [x] Public and non-final fields
+- [x] Unused private methods
+- [ ] Circular dependencies
+- [ ] Depends on concrete classes instead of interfaces
