@@ -8,7 +8,7 @@ import com.openai.models.responses.ResponseCreateParams;
 
 public class llmAccess {
     private static llmAccess me;
-    OpenAIClient client;
+    private static OpenAIClient client;
 
     private String readApiKeyFromFile() {
         try {
