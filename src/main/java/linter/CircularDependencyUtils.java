@@ -94,6 +94,13 @@ public class CircularDependencyUtils {
         if (to == null) return;
         if (from.equals(to)) return; // ignore self-dependency
         dependencyGraph.get(from).add(to);
+
+        if (isConcreteClass(to)) {
+            System.out.println("[Concrete Dependency] " 
+                + from.replace('/', '.') 
+                + " -> " 
+                + to.replace('/', '.'));
+        }
     }
 
     public static void findCycles() {
@@ -127,7 +134,7 @@ public class CircularDependencyUtils {
     }
 
     private static void printCycle(LinkedList<String> path, String start) {
-        System.out.println("### CIRCULAR DEPENDENCY FOUND ###");
+        System.out.print("[Circular Dependency] ");
 
         boolean inCycle = false;
         for (String s : path) {
@@ -135,6 +142,33 @@ public class CircularDependencyUtils {
             if (inCycle) System.out.print(s + " -> ");
         }
         System.out.println(start);
-        System.out.println("---------------------------------\n");
     }
+
+    private static boolean isInterface(String internalName) {
+        try {
+            ClassReader cr = new ClassReader(internalName);
+            ClassNode cn = new ClassNode();
+            cr.accept(cn, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
+            return (cn.access & Opcodes.ACC_INTERFACE) != 0;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private static boolean isAbstractClass(String internalName) {
+        try {
+            ClassReader cr = new ClassReader(internalName);
+            ClassNode cn = new ClassNode();
+            cr.accept(cn, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
+            return (cn.access & Opcodes.ACC_ABSTRACT) != 0;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private static boolean isConcreteClass(String internalName) {
+        // not interface, not abstract
+        return !isInterface(internalName) && !isAbstractClass(internalName);
+    }
+
 }

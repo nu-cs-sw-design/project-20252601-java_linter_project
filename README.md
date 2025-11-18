@@ -16,7 +16,12 @@ Dev Shah, Vihaan Shah
 ```
 
 ## Run Instructions
-Pass fully-qualified class names to the linter:
+Use default bad code classes:
+```bash
+./gradlew run
+```
+
+Optionall pass fully-qualified class names to the linter for manual control:
 
 *Unix*
 ```bash
