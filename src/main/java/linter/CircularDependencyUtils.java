@@ -93,6 +93,9 @@ public class CircularDependencyUtils {
     private static void add(String from, String to) {
         if (to == null) return;
         if (from.equals(to)) return; // ignore self-dependency
+        if (to.startsWith("java/lang/")) return;
+        if (to.startsWith("javax/")) return;
+
         dependencyGraph.get(from).add(to);
 
         if (isConcreteClass(to)) {
