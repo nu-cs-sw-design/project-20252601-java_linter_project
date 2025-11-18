@@ -97,9 +97,44 @@ public class CircularDependencyUtils {
     }
 
     public static void findCycles() {
-        // print dependency graph
-        for(String className : dependencyGraph.keySet()) {
-            System.out.println("Class " + className + " depends on: " + dependencyGraph.get(className));
+        Set<String> visited = new HashSet<>();
+        Set<String> stack = new HashSet<>();
+        LinkedList<String> path = new LinkedList<>();
+
+        for (String node : dependencyGraph.keySet()) {
+            if (!visited.contains(node)) {
+                dfs(node, visited, stack, path);
+            }
         }
+    }
+
+    private static void dfs(String node, Set<String> visited, Set<String> stack, LinkedList<String> path) {
+        visited.add(node);
+        stack.add(node);
+        path.addLast(node);
+
+        for (String next : dependencyGraph.getOrDefault(node, Collections.emptySet())) {
+            if (!visited.contains(next)) {
+                dfs(next, visited, stack, path);
+            } else if (stack.contains(next)) {
+                // CYCLE FOUND: extract cycle path
+                printCycle(path, next);
+            }
+        }
+
+        stack.remove(node);
+        path.removeLast();
+    }
+
+    private static void printCycle(LinkedList<String> path, String start) {
+        System.out.println("### CIRCULAR DEPENDENCY FOUND ###");
+
+        boolean inCycle = false;
+        for (String s : path) {
+            if (s.equals(start)) inCycle = true;
+            if (inCycle) System.out.print(s + " -> ");
+        }
+        System.out.println(start);
+        System.out.println("---------------------------------\n");
     }
 }
