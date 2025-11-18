@@ -14,7 +14,7 @@ ext {
 }
 
 run {
-    args = ["badcode.BadClass"]
+    args = ["badCode.BadClass", "badCode.OtherClass", "badCode.YetAnotherClass", "badCode.someInterface"]
 }
 
 

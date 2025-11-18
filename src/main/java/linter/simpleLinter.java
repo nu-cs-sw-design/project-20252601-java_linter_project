@@ -24,9 +24,11 @@ public class simpleLinter {
     static final boolean shouldCheckTooManyArguments = false;
     static final boolean shouldCheckMethodNameAppropriatenessWithLLM = false;
     static final boolean shouldCheckPublicAndNotFinalFields = false;
-    static final boolean shouldCheckUnusedPrivateMethods = true;
+    static final boolean shouldCheckUnusedPrivateMethods = false;
+    static final boolean shouldCheckCircularDependencies = true;
 
-    public static void main(String[] args) throws IOException {        
+    public static void main(String[] args) throws IOException {    
+        CircularDependencyUtils dependencyUtils = CircularDependencyUtils.getInstance();    
         for (String className : args) {
             ClassReader reader = new ClassReader(className);
             ClassNode classNode = new ClassNode();
@@ -46,7 +48,11 @@ public class simpleLinter {
             for (FieldNode field : fields) {
                 if(shouldCheckPublicAndNotFinalFields) publicAndNotFinalFieldCheck(field);
             }
+
+            if (shouldCheckCircularDependencies) dependencyUtils.analyzeClass(classNode);
         }
+
+        if (shouldCheckCircularDependencies) dependencyUtils.findCycles();
     }
 
     private static void tooManyArgumentsMethodCheck(MethodNode method) {
@@ -142,6 +148,7 @@ public class simpleLinter {
             System.out.println("Warning: " + response);
         }
     }
+
 
 
 }
