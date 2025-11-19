@@ -44,4 +44,4 @@ gradlew.bat run --args="badcode.BadClass"
 - [x] Public and non-final fields
 - [x] Unused private methods
 - [x] Circular dependencies
-- [ ] Depends on concrete classes instead of interfaces
+- [x] Depends on concrete classes instead of interfaces
