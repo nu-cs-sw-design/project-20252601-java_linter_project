@@ -21,7 +21,7 @@ Use default bad code classes:
 ./gradlew run
 ```
 
-Optionall pass fully-qualified class names to the linter for manual control:
+Optionally pass fully-qualified class names to the linter for manual control:
 
 *Unix*
 ```bash
