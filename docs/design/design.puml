@@ -138,39 +138,39 @@ package domain {
             +getResult() : String
         }
 
-        class MethodTooManyArguments implements Check {
+        class MethodTooManyArgumentsCheck implements Check {
             -result : String
-            +MethodTooManyArguments() : void
+            +MethodTooManyArgumentsCheck() : void
             +doCheck(model : Model) : Boolean
             +getResult() : String
         }
 
-        class MethodNameAppropriatenessWithLLM implements Check {
+        class MethodNameAppropriatenessWithLLMCheck implements Check {
             -service : LlmService
             -result : String
-            +MethodNameAppropriatenessWithLLM(service : LlmService) : void
+            +MethodNameAppropriatenessWithLLMCheck(service : LlmService) : void
             +doCheck(model : Model) : Boolean
             +getResult() : String
         }
-        MethodNameAppropriatenessWithLLM --> LlmService
+        MethodNameAppropriatenessWithLLMCheck --> LlmService
 
-        class PublicAndNotFinal implements Check {
+        class PublicAndNotFinalCheck implements Check {
             -result : String
-            +PublicAndNotFinal() : void
-            +doCheck(model : Model) : Boolean
-            +getResult() : String
-        }
-
-        class PrivateMethodUnused implements Check {
-            -result : String
-            +PrivateMethodUnused() : void
+            +PublicAndNotFinalCheck() : void
             +doCheck(model : Model) : Boolean
             +getResult() : String
         }
 
-        class CircularDependencies implements Check {
+        class PrivateMethodUnusedCheck implements Check {
             -result : String
-            +CircularDependencies() : void
+            +PrivateMethodUnusedCheck() : void
+            +doCheck(model : Model) : Boolean
+            +getResult() : String
+        }
+
+        class CircularDependenciesCheck implements Check {
+            -result : String
+            +CircularDependenciesCheck() : void
             +doCheck(model : Model) : Boolean
             +getResult() : String
         }
