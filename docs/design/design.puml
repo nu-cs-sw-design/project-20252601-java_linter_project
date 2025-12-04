@@ -1,2 +1,161 @@
 @startuml
+title Java Linter Design
+
+package org.objectweb.asm{
+    package tree {
+    class ClassNode {
+
+        }
+    class MethodNode {
+
+        }
+
+        class FieldNode {
+
+        }
+    }
+    class Type {
+
+        }
+
+}
+
+package datasource {
+
+    enum LLMProvider {
+        OpenAI
+    }
+
+    class APIKeyManagement {
+        -{final} envFilePath : String
+        +getAPIKey(keyname: LLMProvider) : String
+        +setAPIKey(keyname: LLMProvider, value : String) : void
+    }
+    APIKeyManagement ..> LLMProvider
+
+    package codeModel {
+        class ClassModel {
+            -methods : List<MethodModel>
+            -fields : List<FieldModel>
+            -className : String
+            -isInterface : Boolean
+            -isAbstractClass : Boolean
+            +ClassModel(className : String) : void
+            +getMethods() : List<MethodModel>
+            +getFields() : List<FieldModel>
+            +getClassName() : String
+            +equals() <<override>>
+            +getClassDependencies() : List<ClassModel>
+            +isInterface() : Boolean
+            +isAbstractClass() : Boolean
+        }
+         class MethodModel {
+            -baseClass : ClassModel
+            -name : String
+            -instructions : List<InstructionModel>
+            -returnType : TypeModel
+            -argumentTypes : List<TypeModel>
+            -isPrivate : Boolean
+            +MethodModel(methodNode: MethodNode) : void
+            +getName() : String
+            +getInstructions() : List<InstructionModel>
+            +getNumArgs() : int
+            +getReturnType() : TypeModel
+            +getArgumentsTypes() : List<TypeModel>
+            +getReadableInstructions() : List<String>
+            +callsOtherMethod(otherMethod : MethodModel) : Boolean
+            +isPrivate() : Boolean
+            +getClassDependencies() : List<ClassModel>
+            +equals() <<override>>
+         }
+
+         class FieldModel {
+            -baseClass : ClassModel
+            -name : String
+            -type : TypeModel
+            -isPublic : Boolean
+            -isFinal : Boolean
+            +getBaseClass() : ClassModel
+            +getType() : TypeModel
+            +isPublic() : Boolean
+            +isFinal() : Boolean
+            +FieldModel(fieldNode : FieldNode) : void
+         }
+
+         class TypeModel {
+            -baseClass : ClassModel
+            +getBaseClass() : ClassModel
+            +TypeModel(type : Type) : void
+         }
+
+         class InstructionModel {
+            -insNode : AbstractInsnNode
+            +InstructionModel(insNode : AbstractInsnNode) : void
+            +getClassDependencies() : List<ClassModel>
+            +getReadableInstruction() : String
+            +callsOtherMethod(otherMethod : MethodModel) : Boolean
+         }
+    }
+'    add dependencies
+    parseClass.ClassModel --> parseClass.MethodModel
+    parseClass.ClassModel --> parseClass.FieldModel
+
+
+
+    parseClass.MethodModel --> parseClass.InstructionModel
+    parseClass.FieldModel --> parseClass.TypeModel
+    parseClass.TypeModel --> parseClass.ClassModel
+}
+
+package domain {
+    package LLM {
+        interface LlmService {
+            +getInstance() : LlmService
+            +getResponse(prompt : String) : String
+            +validateAPIKey() : Boolean
+        }
+
+        class OpenAIService implements LlmService {
+            -{final} serviceProvider : LLMProvider
+            -{static} instance : OpenAIService
+            -{final} client : OpenAIClient
+            +{static} getInstance() : LlmService
+            +getResponse(prompt : String) : String
+            +validateAPIKey() : Boolean
+            -OpenAIService() : void
+        }
+        OpenAIService --> APIKeyManagement
+        OpenAIService --> LLMProvider
+
+    }
+}
+
+package presentation {
+    class main {
+        -setLLMService() : void
+        -service : LlmService
+        -ui : UI
+        +main(args : String[]) : void
+    }
+
+    interface UI {
+        +start() : void
+        +shutdown() : void
+        +getUserChoice(choices : List<Type>) : Type
+        +displayMessage(message : String) : void
+        +getTextInput(message : String) : String
+    }
+
+    class CLI implements UI{
+
+    }
+
+    class GUI implements UI {
+
+    }
+
+
+}
+
+
 @enduml
