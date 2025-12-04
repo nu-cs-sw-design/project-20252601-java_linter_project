@@ -34,7 +34,13 @@ package datasource {
     APIKeyManagement ..> LLMProvider
 
     package codeModel {
-        class ClassModel {
+
+        abstract class Model {
+
+        }
+
+
+        class ClassModel implements Model {
             -methods : List<MethodModel>
             -fields : List<FieldModel>
             -className : String
@@ -49,7 +55,7 @@ package datasource {
             +isInterface() : Boolean
             +isAbstractClass() : Boolean
         }
-         class MethodModel {
+         class MethodModel implements Model {
             -baseClass : ClassModel
             -name : String
             -instructions : List<InstructionModel>
@@ -69,7 +75,7 @@ package datasource {
             +equals() <<override>>
          }
 
-         class FieldModel {
+         class FieldModel implements Model {
             -baseClass : ClassModel
             -name : String
             -type : TypeModel
@@ -82,13 +88,13 @@ package datasource {
             +FieldModel(fieldNode : FieldNode) : void
          }
 
-         class TypeModel {
+         class TypeModel implements Model {
             -baseClass : ClassModel
             +getBaseClass() : ClassModel
             +TypeModel(type : Type) : void
          }
 
-         class InstructionModel {
+         class InstructionModel implements Model {
             -insNode : AbstractInsnNode
             +InstructionModel(insNode : AbstractInsnNode) : void
             +getClassDependencies() : List<ClassModel>
@@ -96,12 +102,9 @@ package datasource {
             +callsOtherMethod(otherMethod : MethodModel) : Boolean
          }
     }
-'    add dependencies
+
     parseClass.ClassModel --> parseClass.MethodModel
     parseClass.ClassModel --> parseClass.FieldModel
-
-
-
     parseClass.MethodModel --> parseClass.InstructionModel
     parseClass.FieldModel --> parseClass.TypeModel
     parseClass.TypeModel --> parseClass.ClassModel
@@ -127,6 +130,50 @@ package domain {
         OpenAIService --> APIKeyManagement
         OpenAIService --> LLMProvider
 
+    }
+
+    package checks {
+        interface Check {
+            +doCheck(model : Model) : Boolean
+            +getResult() : String
+        }
+
+        class MethodTooManyArguments implements Check {
+            -result : String
+            +MethodTooManyArguments() : void
+            +doCheck(model : Model) : Boolean
+            +getResult() : String
+        }
+
+        class MethodNameAppropriatenessWithLLM implements Check {
+            -service : LlmService
+            -result : String
+            +MethodNameAppropriatenessWithLLM(service : LlmService) : void
+            +doCheck(model : Model) : Boolean
+            +getResult() : String
+        }
+        MethodNameAppropriatenessWithLLM --> LlmService
+
+        class PublicAndNotFinal implements Check {
+            -result : String
+            +PublicAndNotFinal() : void
+            +doCheck(model : Model) : Boolean
+            +getResult() : String
+        }
+
+        class PrivateMethodUnused implements Check {
+            -result : String
+            +PrivateMethodUnused() : void
+            +doCheck(model : Model) : Boolean
+            +getResult() : String
+        }
+
+        class CircularDependencies implements Check {
+            -result : String
+            +CircularDependencies() : void
+            +doCheck(model : Model) : Boolean
+            +getResult() : String
+        }
     }
 }
 
