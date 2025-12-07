@@ -13,14 +13,15 @@ package "Presentation Layer" {
 
     interface LintResultObserver {
         + onLintResult(result: LintResult): void
-        + onAnalysisComplete(): void
+        + onCheckPassed(checkName: String, classCount: int): void
+        + onAnalysisComplete(totalIssues: int, classCount: int): void
     }
 
     enum ClassInputType {
         COMPILED_CLASS_PATH
         FULLY_QUALIFIED_NAME
     }
-    
+
     interface UserInterface {
         + start(): void
         + promptForClassInputType(): ClassInputType
@@ -44,23 +45,8 @@ package "Presentation Layer" {
         + promptForApiKey(provider: LLMProviderType): String
         + displayError(message: String): void
         + onLintResult(result: LintResult): void
-        + onAnalysisComplete(): void
-    }
-
-    class GUIUserInterface {
-        - mainFrame: JFrame
-        + GUIUserInterface()
-        + start(): void
-        + promptForClassInputType(): ClassInputType
-        + promptForDirectoryOrFiles(): List<String>
-        + promptForFullyQualifiedNames(): List<String>
-        + promptForChecks(available: List<CheckType>): List<CheckType>
-        + promptForLLMProvider(available: List<LLMProviderType>): LLMProviderType
-        + promptForApiKey(provider: LLMProviderType): String
-        + displayError(message: String): void
-        + onLintResult(result: LintResult): void
-        + onAnalysisComplete(): void
-        - initializeComponents(): void
+        + onCheckPassed(checkName: String, classCount: int): void
+        + onAnalysisComplete(totalIssues: int, classCount: int): void
     }
 
     class LintResult {
@@ -92,7 +78,6 @@ package "Domain Layer" {
     class Linter {
         - checkRegistry: LintCheckRegistry
         - classAnalyzer: ClassAnalyzer
-        - config: LinterConfiguration
         - observers: List<LintResultObserver>
         + Linter(config: LinterConfiguration)
         + addObserver(observer: LintResultObserver): void
@@ -101,7 +86,8 @@ package "Domain Layer" {
         + analyzeFromNames(classNames: List<String>, selectedChecks: List<CheckType>): void
         - runChecks(classDataList: List<ClassData>, selectedChecks: List<CheckType>): void
         - notifyObservers(result: LintResult): void
-        - notifyAnalysisComplete(): void
+        - notifyPass(checkName: String, classCount: int): void
+        - notifyAnalysisComplete(totalIssues: int, classCount: int): void
     }
 
     class LinterConfiguration {
@@ -159,7 +145,7 @@ package "Domain Layer" {
     class UnusedPrivateMethodCheck {
         + UnusedPrivateMethodCheck()
         + check(classData: ClassData): List<LintResult>
-        - isMethodCalled(method: MethodData, allMethods: List<MethodData>): boolean
+        - isMethodCalled(targetMethod: MethodData, allMethods: List<MethodData>): boolean
     }
 
     class MethodNameAppropriatenessCheck {
@@ -167,7 +153,6 @@ package "Domain Layer" {
         + MethodNameAppropriatenessCheck(llmService: LLMService)
         + check(classData: ClassData): List<LintResult>
         - buildPrompt(method: MethodData): String
-        - parseResponse(response: String): boolean
     }
 
     class CircularDependencyCheck {
@@ -231,7 +216,6 @@ package "Datasource Layer" {
 
     class OpenAILLMService {
         - client: OpenAIClient
-        - model: String
         + OpenAILLMService(apiKey: String)
         + getResponse(prompt: String): String
         + getProviderName(): String
@@ -239,11 +223,8 @@ package "Datasource Layer" {
     }
 
     class ClassAnalyzer {
-        + ClassAnalyzer()
         + analyzeFromPaths(filePaths: List<String>): List<ClassData>
         + analyzeFromNames(classNames: List<String>): List<ClassData>
-        + scanDirectory(directoryPath: String): List<String>
-        - readClassFile(filePath: String): byte[]
         - parseClassNode(classNode: ClassNode): ClassData
         - parseMethod(methodNode: MethodNode): MethodData
         - parseField(fieldNode: FieldNode): FieldData
@@ -258,8 +239,15 @@ package "Datasource Layer" {
         + getDependencies(className: String): Set<String>
         + collectDependencies(classData: ClassData): void
         + findCycles(): List<List<String>>
-        - dfs(node: String, visited: Set<String>, stack: Set<String>, path: LinkedList<String>): void
-        - isConcreteClass(internalName: String): boolean
+        - dfs(node: String, visited: Set<String>, stack: Set<String>, path: LinkedList<String>, cycles: List<List<String>>): void
+        - extractCycle(path: LinkedList<String>, start: String): List<String>
+        + isConcreteClass(internalName: String): boolean
+        + isUserDefinedClass(internalName: String): boolean
+        - isLibraryClass(internalName: String): boolean
+        - isInterface(internalName: String): boolean
+        - isAbstractClass(internalName: String): boolean
+        - isEnum(internalName: String): boolean
+        - addDependencyFromDescriptor(from: String, descriptor: String): void
         + clear(): void
     }
 
@@ -272,7 +260,9 @@ package "Datasource Layer" {
         + ClassData(className: String)
         + getClassName(): String
         + getSuperName(): String
+        + setSuperName(superName: String): void
         + getInterfaces(): List<String>
+        + setInterfaces(interfaces: List<String>): void
         + getMethods(): List<MethodData>
         + getFields(): List<FieldData>
         + setMethods(methods: List<MethodData>): void
@@ -298,7 +288,9 @@ package "Datasource Layer" {
         + getParameterTypes(): List<String>
         + getParameterCount(): int
         + getCalledMethods(): List<MethodReference>
+        + addCalledMethod(methodRef: MethodReference): void
         + getInstructions(): List<InstructionData>
+        + addInstruction(instruction: InstructionData): void
     }
 
     class FieldData {
@@ -339,8 +331,6 @@ Application --> Linter
 Application --> LinterConfiguration
 CLIUserInterface ..|> UserInterface
 CLIUserInterface ..|> LintResultObserver
-GUIUserInterface ..|> UserInterface
-GUIUserInterface ..|> LintResultObserver
 LintResult --> Severity
 UserInterface ..> ClassInputType
 
@@ -354,7 +344,7 @@ ConcreteDependencyCheck --|> AbstractLintCheck
 ConcreteDependencyCheck --> DependencyGraph
 LintCheckRegistry ..> LintCheck
 Linter --> LintCheckRegistry
-Linter --> LinterConfiguration
+Linter --> ClassAnalyzer
 
 AbstractLLMService ..|> LLMService
 OpenAILLMService --|> AbstractLLMService
@@ -380,6 +370,5 @@ LintCheckRegistry --> LLMServiceFactory
 LintCheckRegistry --> DependencyGraph
 LinterConfiguration --> LLMProviderType
 LinterConfiguration --> CheckType
-Linter --> ClassAnalyzer
 
 @enduml
