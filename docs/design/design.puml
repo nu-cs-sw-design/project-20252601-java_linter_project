@@ -1,7 +1,4 @@
-@startuml LinterExtensibleDesign
-
-skinparam classAttributeIconSize 0
-skinparam linetype ortho
+@startuml
 
 package "Presentation Layer" {
 
