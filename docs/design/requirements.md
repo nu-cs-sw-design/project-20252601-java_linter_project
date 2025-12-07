@@ -1,1 +1,1 @@
-
+All requirements are added to build file. Only other requirement is an OpenAI Api key. The linter will work even without it, but with limited functionality. Review readme for more details.
