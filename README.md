@@ -51,6 +51,45 @@ The linter runs as an interactive CLI application. When you run it, you'll be pr
 gradlew.bat run
 ```
 
+## Example Test Files
+
+The project includes example test classes in the `badCode` package that demonstrate various linting issues. After building the project, you can test the linter with these classes.
+
+### Using Compiled Class Files
+
+After building, copy the compiled class files from the build directory:
+
+*Unix*
+```bash
+# Class files are located at:
+build/classes/java/main/badCode/
+```
+
+*Windows*
+```cmd
+REM Class files are located at:
+build\classes\java\main\badCode\
+```
+
+When prompted for input type, select option 1 (Compiled class files) and provide the full paths to the `.class` files:
+- `build/classes/java/main/badCode/BadClass.class`
+- `build/classes/java/main/badCode/OtherClass.class`
+- `build/classes/java/main/badCode/YetAnotherClass.class`
+- `build/classes/java/main/badCode/someInterface.class`
+
+### Using Fully Qualified Class Names
+
+Alternatively, when prompted for input type, select option 2 (Fully qualified class names) and enter:
+
+- `badCode.BadClass`
+- `badCode.OtherClass`
+- `badCode.YetAnotherClass`
+- `badCode.someInterface`
+
+These example classes contain various code smells that the linter will detect:
+- **BadClass**: Too many arguments, public non-final fields, unused private methods, inappropriate method names
+- **OtherClass**, **YetAnotherClass**, **someInterface**: Circular dependencies and concrete class dependencies
+
 ## Project Structure
 - `refactored/` — Main refactored linter code
   - `presentation/` — User interface and application entry point
