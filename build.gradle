@@ -10,11 +10,11 @@ repositories {
 apply plugin : "java"
 ext {
     // javaMainClass = "exampleLinter.MyFirstLinter"
-    javaMainClass = "linter.simpleLinter"
+    javaMainClass = "refactored.presentation.Application"
 }
 
 run {
-    args = ["badCode.BadClass", "badCode.OtherClass", "badCode.YetAnotherClass", "badCode.someInterface"]
+    standardInput = System.in
 }
 
 
