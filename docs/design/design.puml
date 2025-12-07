@@ -1,208 +1,388 @@
-@startuml
-title Java Linter Design
+@startuml LinterExtensibleDesign
 
-package org.objectweb.asm{
-    package tree {
-    class ClassNode {
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
 
-        }
-    class MethodNode {
+package "Presentation Layer" {
 
-        }
-
-        class FieldNode {
-
-        }
-    }
-    class Type {
-
-        }
-
-}
-
-package datasource {
-
-    enum LLMProvider {
-        OpenAI
+    class Application {
+        - ui: UserInterface
+        - linter: Linter
+        - config: LinterConfiguration
+        + Application(ui: UserInterface)
+        + run(): void
+        + {static} main(args: String[]): void
     }
 
-    class APIKeyManagement {
-        -{final} envFilePath : String
-        +getAPIKey(keyname: LLMProvider) : String
-        +setAPIKey(keyname: LLMProvider, value : String) : void
-    }
-    APIKeyManagement ..> LLMProvider
-
-    package codeModel {
-
-        abstract class Model {
-
-        }
-
-
-        class ClassModel implements Model {
-            -methods : List<MethodModel>
-            -fields : List<FieldModel>
-            -className : String
-            -isInterface : Boolean
-            -isAbstractClass : Boolean
-            +ClassModel(className : String) : void
-            +getMethods() : List<MethodModel>
-            +getFields() : List<FieldModel>
-            +getClassName() : String
-            +equals() <<override>>
-            +getClassDependencies() : List<ClassModel>
-            +isInterface() : Boolean
-            +isAbstractClass() : Boolean
-        }
-         class MethodModel implements Model {
-            -baseClass : ClassModel
-            -name : String
-            -instructions : List<InstructionModel>
-            -returnType : TypeModel
-            -argumentTypes : List<TypeModel>
-            -isPrivate : Boolean
-            +MethodModel(methodNode: MethodNode) : void
-            +getName() : String
-            +getInstructions() : List<InstructionModel>
-            +getNumArgs() : int
-            +getReturnType() : TypeModel
-            +getArgumentsTypes() : List<TypeModel>
-            +getReadableInstructions() : List<String>
-            +callsOtherMethod(otherMethod : MethodModel) : Boolean
-            +isPrivate() : Boolean
-            +getClassDependencies() : List<ClassModel>
-            +equals() <<override>>
-         }
-
-         class FieldModel implements Model {
-            -baseClass : ClassModel
-            -name : String
-            -type : TypeModel
-            -isPublic : Boolean
-            -isFinal : Boolean
-            +getBaseClass() : ClassModel
-            +getType() : TypeModel
-            +isPublic() : Boolean
-            +isFinal() : Boolean
-            +FieldModel(fieldNode : FieldNode) : void
-         }
-
-         class TypeModel implements Model {
-            -baseClass : ClassModel
-            +getBaseClass() : ClassModel
-            +TypeModel(type : Type) : void
-         }
-
-         class InstructionModel implements Model {
-            -insNode : AbstractInsnNode
-            +InstructionModel(insNode : AbstractInsnNode) : void
-            +getClassDependencies() : List<ClassModel>
-            +getReadableInstruction() : String
-            +callsOtherMethod(otherMethod : MethodModel) : Boolean
-         }
+    interface LintResultObserver {
+        + onLintResult(result: LintResult): void
+        + onAnalysisComplete(): void
     }
 
-    parseClass.ClassModel --> parseClass.MethodModel
-    parseClass.ClassModel --> parseClass.FieldModel
-    parseClass.MethodModel --> parseClass.InstructionModel
-    parseClass.FieldModel --> parseClass.TypeModel
-    parseClass.TypeModel --> parseClass.ClassModel
-}
-
-package domain {
-    package LLM {
-        interface LlmService {
-            +getInstance() : LlmService
-            +getResponse(prompt : String) : String
-            +validateAPIKey() : Boolean
-        }
-
-        class OpenAIService implements LlmService {
-            -{final} serviceProvider : LLMProvider
-            -{static} instance : OpenAIService
-            -{final} client : OpenAIClient
-            +{static} getInstance() : LlmService
-            +getResponse(prompt : String) : String
-            +validateAPIKey() : Boolean
-            -OpenAIService() : void
-        }
-        OpenAIService --> APIKeyManagement
-        OpenAIService --> LLMProvider
-
+    enum ClassInputType {
+        COMPILED_CLASS_PATH
+        FULLY_QUALIFIED_NAME
+    }
+    
+    interface UserInterface {
+        + start(): void
+        + promptForClassInputType(): ClassInputType
+        + promptForDirectoryOrFiles(): List<String>
+        + promptForFullyQualifiedNames(): List<String>
+        + promptForChecks(available: List<CheckType>): List<CheckType>
+        + promptForLLMProvider(available: List<LLMProviderType>): LLMProviderType
+        + promptForApiKey(provider: LLMProviderType): String
+        + displayError(message: String): void
     }
 
-    package checks {
-        interface Check {
-            +doCheck(model : Model) : Boolean
-            +getResult() : String
-        }
+    class CLIUserInterface {
+        - scanner: Scanner
+        + CLIUserInterface()
+        + start(): void
+        + promptForClassInputType(): ClassInputType
+        + promptForDirectoryOrFiles(): List<String>
+        + promptForFullyQualifiedNames(): List<String>
+        + promptForChecks(available: List<CheckType>): List<CheckType>
+        + promptForLLMProvider(available: List<LLMProviderType>): LLMProviderType
+        + promptForApiKey(provider: LLMProviderType): String
+        + displayError(message: String): void
+        + onLintResult(result: LintResult): void
+        + onAnalysisComplete(): void
+    }
 
-        class MethodTooManyArgumentsCheck implements Check {
-            -result : String
-            +MethodTooManyArgumentsCheck() : void
-            +doCheck(model : Model) : Boolean
-            +getResult() : String
-        }
+    class GUIUserInterface {
+        - mainFrame: JFrame
+        + GUIUserInterface()
+        + start(): void
+        + promptForClassInputType(): ClassInputType
+        + promptForDirectoryOrFiles(): List<String>
+        + promptForFullyQualifiedNames(): List<String>
+        + promptForChecks(available: List<CheckType>): List<CheckType>
+        + promptForLLMProvider(available: List<LLMProviderType>): LLMProviderType
+        + promptForApiKey(provider: LLMProviderType): String
+        + displayError(message: String): void
+        + onLintResult(result: LintResult): void
+        + onAnalysisComplete(): void
+        - initializeComponents(): void
+    }
 
-        class MethodNameAppropriatenessWithLLMCheck implements Check {
-            -service : LlmService
-            -result : String
-            +MethodNameAppropriatenessWithLLMCheck(service : LlmService) : void
-            +doCheck(model : Model) : Boolean
-            +getResult() : String
-        }
-        MethodNameAppropriatenessWithLLMCheck --> LlmService
+    class LintResult {
+        - severity: Severity
+        - message: String
+        - location: String
+        - checkName: String
+        - suggestion: String
+        + LintResult(severity: Severity, message: String, location: String, checkName: String)
+        + getSeverity(): Severity
+        + getMessage(): String
+        + getLocation(): String
+        + getCheckName(): String
+        + getSuggestion(): String
+        + setSuggestion(suggestion: String): void
+        + toString(): String
+    }
 
-        class PublicAndNotFinalCheck implements Check {
-            -result : String
-            +PublicAndNotFinalCheck() : void
-            +doCheck(model : Model) : Boolean
-            +getResult() : String
-        }
-
-        class PrivateMethodUnusedCheck implements Check {
-            -result : String
-            +PrivateMethodUnusedCheck() : void
-            +doCheck(model : Model) : Boolean
-            +getResult() : String
-        }
-
-        class CircularDependenciesCheck implements Check {
-            -result : String
-            +CircularDependenciesCheck() : void
-            +doCheck(model : Model) : Boolean
-            +getResult() : String
-        }
+    enum Severity {
+        INFO
+        WARNING
+        ERROR
+        CRITICAL
     }
 }
 
-package presentation {
-    class main {
-        -setLLMService() : void
-        -service : LlmService
-        -ui : UI
-        +main(args : String[]) : void
+package "Domain Layer" {
+
+    class Linter {
+        - checkRegistry: LintCheckRegistry
+        - classAnalyzer: ClassAnalyzer
+        - config: LinterConfiguration
+        - observers: List<LintResultObserver>
+        + Linter(config: LinterConfiguration)
+        + addObserver(observer: LintResultObserver): void
+        + removeObserver(observer: LintResultObserver): void
+        + analyzeFromPaths(filePaths: List<String>, selectedChecks: List<CheckType>): void
+        + analyzeFromNames(classNames: List<String>, selectedChecks: List<CheckType>): void
+        - runChecks(classDataList: List<ClassData>, selectedChecks: List<CheckType>): void
+        - notifyObservers(result: LintResult): void
+        - notifyAnalysisComplete(): void
     }
 
-    interface UI {
-        +start() : void
-        +shutdown() : void
-        +getUserChoice(choices : List<Type>) : Type
-        +displayMessage(message : String) : void
-        +getTextInput(message : String) : String
+    class LinterConfiguration {
+        - maxArguments: int
+        - llmProviderType: LLMProviderType
+        - apiKey: String
+        - enabledChecks: Set<CheckType>
+        + LinterConfiguration()
+        + getMaxArguments(): int
+        + setMaxArguments(max: int): void
+        + getLLMProviderType(): LLMProviderType
+        + setLLMProviderType(type: LLMProviderType): void
+        + getApiKey(): String
+        + setApiKey(apiKey: String): void
+        + getEnabledChecks(): Set<CheckType>
+        + setEnabledChecks(checks: Set<CheckType>): void
     }
 
-    class CLI implements UI{
-
+    interface LintCheck {
+        + getName(): String
+        + getDescription(): String
+        + getCheckType(): CheckType
+        + check(classData: ClassData): List<LintResult>
     }
 
-    class GUI implements UI {
-
+    abstract class AbstractLintCheck {
+        # checkType: CheckType
+        # name: String
+        # description: String
+        + AbstractLintCheck(checkType: CheckType, name: String, description: String)
+        + getName(): String
+        + getDescription(): String
+        + getCheckType(): CheckType
+        + {abstract} check(classData: ClassData): List<LintResult>
+        # createResult(severity: Severity, message: String, location: String): LintResult
     }
 
+    class TooManyArgumentsCheck {
+        - maxArguments: int
+        + TooManyArgumentsCheck(maxArguments: int)
+        + check(classData: ClassData): List<LintResult>
+    }
 
+    class ConcreteDependencyCheck {
+        - dependencyGraph: DependencyGraph
+        + ConcreteDependencyCheck(dependencyGraph: DependencyGraph)
+        + check(classData: ClassData): List<LintResult>
+    }
+
+    class PublicNonFinalFieldCheck {
+        + PublicNonFinalFieldCheck()
+        + check(classData: ClassData): List<LintResult>
+    }
+
+    class UnusedPrivateMethodCheck {
+        + UnusedPrivateMethodCheck()
+        + check(classData: ClassData): List<LintResult>
+        - isMethodCalled(method: MethodData, allMethods: List<MethodData>): boolean
+    }
+
+    class MethodNameAppropriatenessCheck {
+        - llmService: LLMService
+        + MethodNameAppropriatenessCheck(llmService: LLMService)
+        + check(classData: ClassData): List<LintResult>
+        - buildPrompt(method: MethodData): String
+        - parseResponse(response: String): boolean
+    }
+
+    class CircularDependencyCheck {
+        - dependencyGraph: DependencyGraph
+        + CircularDependencyCheck(dependencyGraph: DependencyGraph)
+        + check(classData: ClassData): List<LintResult>
+        + detectAllCycles(): List<LintResult>
+    }
+
+    class LintCheckRegistry {
+        - {static} instance: LintCheckRegistry
+        - config: LinterConfiguration
+        - llmServiceFactory: LLMServiceFactory
+        - dependencyGraph: DependencyGraph
+        - LintCheckRegistry(config: LinterConfiguration, llmServiceFactory: LLMServiceFactory, dependencyGraph: DependencyGraph)
+        + {static} getInstance(config: LinterConfiguration, llmServiceFactory: LLMServiceFactory, dependencyGraph: DependencyGraph): LintCheckRegistry
+        + createCheck(type: CheckType): LintCheck
+        + getAvailableCheckTypes(): List<CheckType>
+    }
+
+    enum CheckType {
+        TOO_MANY_ARGUMENTS
+        PUBLIC_NON_FINAL_FIELD
+        UNUSED_PRIVATE_METHOD
+        METHOD_NAME_APPROPRIATENESS
+        CIRCULAR_DEPENDENCY
+        CONCRETE_DEPENDENCY
+    }
 }
 
+package "Datasource Layer" {
+
+    interface LLMService {
+        + getResponse(prompt: String): String
+        + getProviderName(): String
+        + isAvailable(): boolean
+    }
+
+    class LLMServiceFactory {
+        - {static} instance: LLMServiceFactory
+        - LLMServiceFactory()
+        + {static} getInstance(): LLMServiceFactory
+        + createService(type: LLMProviderType, apiKey: String): LLMService
+        + getAvailableProviders(): List<LLMProviderType>
+    }
+
+    enum LLMProviderType {
+        OPENAI
+    }
+
+    abstract class AbstractLLMService {
+        # apiKey: String
+        # baseUrl: String
+        # timeout: int
+        + AbstractLLMService(apiKey: String)
+        + {abstract} getResponse(prompt: String): String
+        + {abstract} getProviderName(): String
+        + isAvailable(): boolean
+        # handleError(e: Exception): String
+    }
+
+    class OpenAILLMService {
+        - client: OpenAIClient
+        - model: String
+        + OpenAILLMService(apiKey: String)
+        + getResponse(prompt: String): String
+        + getProviderName(): String
+        - extractTextFromResponse(response: Response): String
+    }
+
+    class ClassAnalyzer {
+        + ClassAnalyzer()
+        + analyzeFromPaths(filePaths: List<String>): List<ClassData>
+        + analyzeFromNames(classNames: List<String>): List<ClassData>
+        + scanDirectory(directoryPath: String): List<String>
+        - readClassFile(filePath: String): byte[]
+        - parseClassNode(classNode: ClassNode): ClassData
+        - parseMethod(methodNode: MethodNode): MethodData
+        - parseField(fieldNode: FieldNode): FieldData
+    }
+
+    class DependencyGraph {
+        - {static} instance: DependencyGraph
+        - graph: Map<String, Set<String>>
+        - DependencyGraph()
+        + {static} getInstance(): DependencyGraph
+        + addDependency(from: String, to: String): void
+        + getDependencies(className: String): Set<String>
+        + collectDependencies(classData: ClassData): void
+        + findCycles(): List<List<String>>
+        - dfs(node: String, visited: Set<String>, stack: Set<String>, path: LinkedList<String>): void
+        - isConcreteClass(internalName: String): boolean
+        + clear(): void
+    }
+
+    class ClassData {
+        - className: String
+        - superName: String
+        - interfaces: List<String>
+        - methods: List<MethodData>
+        - fields: List<FieldData>
+        + ClassData(className: String)
+        + getClassName(): String
+        + getSuperName(): String
+        + getInterfaces(): List<String>
+        + getMethods(): List<MethodData>
+        + getFields(): List<FieldData>
+        + setMethods(methods: List<MethodData>): void
+        + setFields(fields: List<FieldData>): void
+    }
+
+    class MethodData {
+        - name: String
+        - descriptor: String
+        - accessFlags: int
+        - returnType: String
+        - parameterTypes: List<String>
+        - instructions: List<InstructionData>
+        - calledMethods: List<MethodReference>
+        + MethodData(name: String, descriptor: String, accessFlags: int)
+        + getName(): String
+        + getDescriptor(): String
+        + isPrivate(): boolean
+        + isPublic(): boolean
+        + isStatic(): boolean
+        + isConstructor(): boolean
+        + getReturnType(): String
+        + getParameterTypes(): List<String>
+        + getParameterCount(): int
+        + getCalledMethods(): List<MethodReference>
+        + getInstructions(): List<InstructionData>
+    }
+
+    class FieldData {
+        - name: String
+        - descriptor: String
+        - accessFlags: int
+        + FieldData(name: String, descriptor: String, accessFlags: int)
+        + getName(): String
+        + getDescriptor(): String
+        + isPublic(): boolean
+        + isPrivate(): boolean
+        + isFinal(): boolean
+        + isStatic(): boolean
+    }
+
+    class MethodReference {
+        - owner: String
+        - name: String
+        - descriptor: String
+        + MethodReference(owner: String, name: String, descriptor: String)
+        + getOwner(): String
+        + getName(): String
+        + getDescriptor(): String
+        + matches(method: MethodData): boolean
+    }
+
+    class InstructionData {
+        - opcode: int
+        - textRepresentation: String
+        + InstructionData(opcode: int, textRepresentation: String)
+        + getOpcode(): int
+        + getTextRepresentation(): String
+    }
+}
+
+Application --> UserInterface
+Application --> Linter
+Application --> LinterConfiguration
+CLIUserInterface ..|> UserInterface
+CLIUserInterface ..|> LintResultObserver
+GUIUserInterface ..|> UserInterface
+GUIUserInterface ..|> LintResultObserver
+LintResult --> Severity
+UserInterface ..> ClassInputType
+
+AbstractLintCheck ..|> LintCheck
+TooManyArgumentsCheck --|> AbstractLintCheck
+PublicNonFinalFieldCheck --|> AbstractLintCheck
+UnusedPrivateMethodCheck --|> AbstractLintCheck
+MethodNameAppropriatenessCheck --|> AbstractLintCheck
+CircularDependencyCheck --|> AbstractLintCheck
+ConcreteDependencyCheck --|> AbstractLintCheck
+ConcreteDependencyCheck --> DependencyGraph
+LintCheckRegistry ..> LintCheck
+Linter --> LintCheckRegistry
+Linter --> LinterConfiguration
+
+AbstractLLMService ..|> LLMService
+OpenAILLMService --|> AbstractLLMService
+LLMServiceFactory ..> LLMService
+LLMServiceFactory ..> LLMProviderType
+ClassAnalyzer ..> ClassData
+ClassData --> MethodData
+ClassData --> FieldData
+MethodData --> MethodReference
+MethodData --> InstructionData
+DependencyGraph ..> ClassData
+
+Linter --> LintResultObserver
+UserInterface ..> CheckType
+UserInterface ..> LLMProviderType
+
+LintCheck ..> ClassData
+LintCheck ..> LintResult
+MethodNameAppropriatenessCheck --> LLMService
+CircularDependencyCheck --> DependencyGraph
+LintCheckRegistry --> LinterConfiguration
+LintCheckRegistry --> LLMServiceFactory
+LintCheckRegistry --> DependencyGraph
+LinterConfiguration --> LLMProviderType
+LinterConfiguration --> CheckType
+Linter --> ClassAnalyzer
 
 @enduml
