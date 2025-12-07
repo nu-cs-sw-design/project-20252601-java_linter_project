@@ -1,4 +1,4 @@
-package refactored.datasource;
+package refactored.datasource.internal_model;
 
 import java.util.ArrayList;
 import java.util.List;

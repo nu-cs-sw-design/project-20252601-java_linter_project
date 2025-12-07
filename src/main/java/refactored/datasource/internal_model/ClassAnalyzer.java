@@ -1,4 +1,4 @@
-package refactored.datasource;
+package refactored.datasource.internal_model;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.*;

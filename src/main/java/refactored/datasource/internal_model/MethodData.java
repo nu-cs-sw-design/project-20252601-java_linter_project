@@ -1,4 +1,4 @@
-package refactored.datasource;
+package refactored.datasource.internal_model;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
