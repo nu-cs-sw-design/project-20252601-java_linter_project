@@ -3,6 +3,10 @@
 ## Contributors
 Dev Shah, Vihaan Shah
 
+## Demo
+
+Watch a video demonstration of the project (including the LLM check that requires api access): [Loom Recording](https://www.loom.com/share/f89a30cc2e9b4a8183b48c3f2a5b605f)
+
 ## Dependencies
 - Java 21+
 - Gradle 8+
@@ -23,6 +27,16 @@ gradlew.bat build
 
 ## Run Instructions
 
+*Unix*
+```bash
+./gradlew run
+```
+
+*Windows*
+```cmd
+gradlew.bat run
+```
+
 The linter runs as an interactive CLI application. When you run it, you'll be prompted to:
 
 1. **Select input type:**
@@ -41,15 +55,6 @@ The linter runs as an interactive CLI application. When you run it, you'll be pr
 
 4. **Provide class input:** Enter class file paths or fully qualified class names
 
-*Unix*
-```bash
-./gradlew run
-```
-
-*Windows*
-```cmd
-gradlew.bat run
-```
 
 ## Example Test Files
 
