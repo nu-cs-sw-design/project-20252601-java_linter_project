@@ -1,4 +1,4 @@
-package refactored.datasource.llm;
+package refactored.datasource;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;

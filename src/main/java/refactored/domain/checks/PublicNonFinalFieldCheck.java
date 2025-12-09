@@ -1,4 +1,4 @@
-package refactored.domain;
+package refactored.domain.checks;
 
 import refactored.domain.internal_model.ClassData;
 import refactored.domain.internal_model.FieldData;

@@ -1,9 +1,10 @@
 package refactored.domain;
 
 import refactored.datasource.ClassAnalyzer;
+import refactored.domain.checks.*;
 import refactored.domain.internal_model.ClassData;
 import refactored.datasource.DependencyGraph;
-import refactored.datasource.llm.LLMService;
+import refactored.datasource.LLMService;
 import refactored.presentation.LintResult;
 import refactored.presentation.LintResultObserver;
 import java.io.IOException;

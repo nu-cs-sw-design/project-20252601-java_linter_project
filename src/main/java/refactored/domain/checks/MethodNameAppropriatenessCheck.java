@@ -1,8 +1,8 @@
-package refactored.domain;
+package refactored.domain.checks;
 
 import refactored.domain.internal_model.ClassData;
 import refactored.domain.internal_model.InstructionData;
-import refactored.datasource.llm.LLMService;
+import refactored.datasource.LLMService;
 import refactored.domain.internal_model.MethodData;
 import refactored.presentation.LintResult;
 import refactored.presentation.Severity;

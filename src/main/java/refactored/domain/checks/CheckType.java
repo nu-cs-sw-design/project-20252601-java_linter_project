@@ -1,4 +1,4 @@
-package refactored.domain;
+package refactored.domain.checks;
 
 public enum CheckType {
     TOO_MANY_ARGUMENTS,

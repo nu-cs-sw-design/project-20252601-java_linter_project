@@ -1,4 +1,4 @@
-package refactored.datasource.llm;
+package refactored.datasource;
 
 public enum LLMProviderType {
     OPENAI

@@ -1,9 +1,9 @@
 package refactored.presentation;
 
-import refactored.datasource.llm.LLMProviderType;
-import refactored.datasource.llm.LLMService;
+import refactored.datasource.LLMProviderType;
+import refactored.datasource.LLMService;
 import refactored.domain.LLMServiceFactory;
-import refactored.domain.CheckType;
+import refactored.domain.checks.CheckType;
 import refactored.domain.Linter;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public class Application {
         List<CheckType> selectedChecks = ui.promptForChecks(availableChecks);
 
         if (selectedChecks.contains(CheckType.METHOD_NAME_APPROPRIATENESS)) {
-            LLMServiceFactory factory = LLMServiceFactory.getInstance();
+            LLMServiceFactory factory = new LLMServiceFactory();
             List<LLMProviderType> providers = factory.getAvailableProviders();
             LLMProviderType provider = ui.promptForLLMProvider(providers);
 

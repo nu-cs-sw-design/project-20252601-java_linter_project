@@ -1,7 +1,7 @@
 package refactored.presentation;
 
-import refactored.datasource.llm.LLMProviderType;
-import refactored.domain.CheckType;
+import refactored.datasource.LLMProviderType;
+import refactored.domain.checks.CheckType;
 import java.util.List;
 
 public interface UserInterface {
