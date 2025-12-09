@@ -3,25 +3,23 @@ package refactored.domain;
 import refactored.datasource.internal_model.ClassAnalyzer;
 import refactored.datasource.internal_model.ClassData;
 import refactored.datasource.DependencyGraph;
-import refactored.datasource.llm.LLMServiceFactory;
+import refactored.datasource.llm.LLMService;
 import refactored.presentation.LintResult;
 import refactored.presentation.LintResultObserver;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Linter {
-    private LintCheckRegistry checkRegistry;
-    private ClassAnalyzer classAnalyzer;
-    private List<LintResultObserver> observers;
+    private final ClassAnalyzer classAnalyzer;
+    private final DependencyGraph dependencyGraph;
+    private final List<LintResultObserver> observers;
+    private LLMService llmService;
+    private static final int MAX_ARGUMENTS = 3;
 
-    public Linter(LinterConfiguration config) {
+    public Linter() {
         this.classAnalyzer = new ClassAnalyzer();
         this.observers = new ArrayList<>();
-
-        DependencyGraph dependencyGraph = DependencyGraph.getInstance();
-        LLMServiceFactory llmServiceFactory = LLMServiceFactory.getInstance();
-        this.checkRegistry = LintCheckRegistry.getInstance(config, llmServiceFactory, dependencyGraph);
+        this.dependencyGraph = DependencyGraph.getInstance();
     }
 
     public void addObserver(LintResultObserver observer) {
@@ -65,7 +63,7 @@ public class Linter {
         int totalIssues = 0;
 
         for (CheckType checkType : selectedChecks) {
-            LintCheck check = checkRegistry.createCheck(checkType);
+            LintCheck check = createCheck(checkType);
 
             if (check instanceof CircularDependencyCheck) {
                 circularCheck = (CircularDependencyCheck) check;
@@ -118,4 +116,34 @@ public class Linter {
             observer.onAnalysisComplete(totalIssues, classCount);
         }
     }
+
+    public void registerLLMService(LLMService llmService) {
+        this.llmService = llmService;
+    }
+
+    private LintCheck createCheck(CheckType type) {
+        switch (type) {
+            case TOO_MANY_ARGUMENTS:
+                return new TooManyArgumentsCheck(MAX_ARGUMENTS);
+
+            case PUBLIC_NON_FINAL_FIELD:
+                return new PublicNonFinalFieldCheck();
+
+            case UNUSED_PRIVATE_METHOD:
+                return new UnusedPrivateMethodCheck();
+
+            case METHOD_NAME_APPROPRIATENESS:
+                return new MethodNameAppropriatenessCheck(llmService);
+
+            case CIRCULAR_DEPENDENCY:
+                return new CircularDependencyCheck(dependencyGraph);
+
+            case CONCRETE_DEPENDENCY:
+                return new ConcreteDependencyCheck(dependencyGraph);
+
+            default:
+                throw new IllegalArgumentException("Unknown check type: " + type);
+        }
+    }
+
 }

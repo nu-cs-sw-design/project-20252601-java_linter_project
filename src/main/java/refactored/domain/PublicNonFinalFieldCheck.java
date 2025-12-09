@@ -7,7 +7,7 @@ import refactored.presentation.Severity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PublicNonFinalFieldCheck extends AbstractLintCheck {
+public class PublicNonFinalFieldCheck extends LintCheck {
 
     public PublicNonFinalFieldCheck() {
         super(CheckType.PUBLIC_NON_FINAL_FIELD,

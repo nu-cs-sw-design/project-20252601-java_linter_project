@@ -1,11 +1,11 @@
 package refactored.datasource.llm;
 
-public abstract class AbstractLLMService {
+public abstract class LLMService {
     protected String apiKey;
     protected String baseUrl;
     protected int timeout;
 
-    public AbstractLLMService(String apiKey) {
+    public LLMService(String apiKey) {
         this.apiKey = apiKey;
         this.timeout = 30000;
     }

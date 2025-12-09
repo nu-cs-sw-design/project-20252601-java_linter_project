@@ -8,7 +8,7 @@ import refactored.presentation.Severity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UnusedPrivateMethodCheck extends AbstractLintCheck {
+public class UnusedPrivateMethodCheck extends LintCheck {
 
     public UnusedPrivateMethodCheck() {
         super(CheckType.UNUSED_PRIVATE_METHOD,

@@ -1,21 +1,20 @@
 package refactored.presentation;
 
 import refactored.datasource.llm.LLMProviderType;
-import refactored.datasource.llm.LLMServiceFactory;
+import refactored.datasource.llm.LLMService;
+import refactored.domain.LLMServiceFactory;
 import refactored.domain.CheckType;
 import refactored.domain.Linter;
-import refactored.domain.LinterConfiguration;
+
 import java.util.List;
 
 public class Application {
     private UserInterface ui;
     private Linter linter;
-    private LinterConfiguration config;
 
     public Application(UserInterface ui) {
         this.ui = ui;
-        this.config = new LinterConfiguration();
-        this.linter = new Linter(config);
+        this.linter = new Linter();
     }
 
     public void run() {
@@ -31,11 +30,9 @@ public class Application {
             List<LLMProviderType> providers = factory.getAvailableProviders();
             LLMProviderType provider = ui.promptForLLMProvider(providers);
 
-            if (provider != null) {
-                String apiKey = ui.promptForApiKey(provider);
-                config.setLLMProviderType(provider);
-                config.setApiKey(apiKey);
-            }
+            String apiKey = ui.promptForApiKey(provider);
+            LLMService llmService = factory.createService(provider, apiKey);
+            linter.registerLLMService(llmService);
         }
 
         if (ui instanceof LintResultObserver) {

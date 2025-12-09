@@ -1,4 +1,8 @@
-package refactored.datasource.llm;
+package refactored.domain;
+
+import refactored.datasource.llm.LLMProviderType;
+import refactored.datasource.llm.LLMService;
+import refactored.datasource.llm.OpenAILLMService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +19,7 @@ public class LLMServiceFactory {
         return instance;
     }
 
-    public AbstractLLMService createService(LLMProviderType type, String apiKey) {
+    public LLMService createService(LLMProviderType type, String apiKey) {
         switch (type) {
             case OPENAI:
                 return new OpenAILLMService(apiKey);

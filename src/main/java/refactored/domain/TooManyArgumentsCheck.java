@@ -7,7 +7,7 @@ import refactored.presentation.Severity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TooManyArgumentsCheck extends AbstractLintCheck {
+public class TooManyArgumentsCheck extends LintCheck {
     private int maxArguments;
 
     public TooManyArgumentsCheck(int maxArguments) {

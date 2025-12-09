@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class ConcreteDependencyCheck extends AbstractLintCheck {
+public class ConcreteDependencyCheck extends LintCheck {
     private DependencyGraph dependencyGraph;
 
     public ConcreteDependencyCheck(DependencyGraph dependencyGraph) {

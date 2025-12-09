@@ -7,7 +7,7 @@ import refactored.presentation.Severity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CircularDependencyCheck extends AbstractLintCheck {
+public class CircularDependencyCheck extends LintCheck {
     private DependencyGraph dependencyGraph;
 
     public CircularDependencyCheck(DependencyGraph dependencyGraph) {
