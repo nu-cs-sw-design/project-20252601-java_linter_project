@@ -1,9 +1,9 @@
 package refactored.domain;
 
 import refactored.datasource.ClassAnalyzer;
+import refactored.datasource.ASMBytecodeAdapter;
 import refactored.domain.checks.*;
 import refactored.domain.internal_model.ClassData;
-import refactored.datasource.DependencyGraph;
 import refactored.datasource.LLMService;
 import refactored.domain.lint_result.LintResult;
 import refactored.domain.lint_result.LintResultObserver;
@@ -22,7 +22,7 @@ public class Linter {
     public Linter() {
         this.classAnalyzer = new ClassAnalyzer();
         this.observers = new ArrayList<>();
-        this.dependencyGraph = DependencyGraph.getInstance();
+        this.dependencyGraph = new DependencyGraph(new ASMBytecodeAdapter());
     }
 
     public void addObserver(LintResultObserver observer) {

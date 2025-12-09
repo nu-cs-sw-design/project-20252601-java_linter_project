@@ -1,31 +1,21 @@
-package refactored.datasource;
+package refactored.domain;
 
+import refactored.datasource.BytecodeAdapter;
 import refactored.domain.internal_model.FieldData;
 import refactored.domain.internal_model.ClassData;
 import refactored.domain.internal_model.MethodData;
 import refactored.domain.internal_model.MethodReference;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.*;
-
 import java.io.IOException;
 import java.util.*;
 
 public class DependencyGraph {
-    private static DependencyGraph instance;
     private Map<String, Set<String>> graph;
+    private BytecodeAdapter adapter;
 
-    private DependencyGraph() {
+    public DependencyGraph(BytecodeAdapter adapter) {
         this.graph = new HashMap<>();
-    }
-
-    public static DependencyGraph getInstance() {
-        if (instance == null) {
-            instance = new DependencyGraph();
-        }
-        return instance;
+        this.adapter = adapter;
     }
 
     public void addDependency(String from, String to) {
@@ -82,16 +72,13 @@ public class DependencyGraph {
     }
 
     private void addDependencyFromDescriptor(String from, String descriptor) {
-        Type type = Type.getType(descriptor);
-        switch (type.getSort()) {
-            case Type.OBJECT:
-                addDependency(from, type.getInternalName());
-                break;
-            case Type.ARRAY:
-                if (type.getElementType().getSort() == Type.OBJECT) {
-                    addDependency(from, type.getElementType().getInternalName());
-                }
-                break;
+        if (adapter == null) {
+            throw new IllegalStateException("BytecodeAdapter not set. Call setAdapter() first.");
+        }
+        
+        List<String> typeReferences = adapter.extractTypeReferencesFromDescriptor(descriptor);
+        for (String typeRef : typeReferences) {
+            addDependency(from, typeRef);
         }
     }
 
@@ -160,33 +147,33 @@ public class DependencyGraph {
     }
 
     private boolean isInterface(String internalName) {
+        if (adapter == null) {
+            return false;
+        }
         try {
-            ClassReader reader = new ClassReader(internalName);
-            ClassNode classNode = new ClassNode();
-            reader.accept(classNode, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
-            return (classNode.access & Opcodes.ACC_INTERFACE) != 0;
+            return adapter.isInterface(internalName);
         } catch (IOException e) {
             return false;
         }
     }
 
     private boolean isAbstractClass(String internalName) {
+        if (adapter == null) {
+            return false;
+        }
         try {
-            ClassReader reader = new ClassReader(internalName);
-            ClassNode classNode = new ClassNode();
-            reader.accept(classNode, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
-            return (classNode.access & Opcodes.ACC_ABSTRACT) != 0;
+            return adapter.isAbstractClass(internalName);
         } catch (IOException e) {
             return false;
         }
     }
 
     private boolean isEnum(String internalName) {
+        if (adapter == null) {
+            return false;
+        }
         try {
-            ClassReader reader = new ClassReader(internalName);
-            ClassNode classNode = new ClassNode();
-            reader.accept(classNode, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
-            return (classNode.access & Opcodes.ACC_ENUM) != 0;
+            return adapter.isEnum(internalName);
         } catch (IOException e) {
             return false;
         }

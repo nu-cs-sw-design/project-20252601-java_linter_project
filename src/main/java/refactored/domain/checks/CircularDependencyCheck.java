@@ -1,7 +1,7 @@
 package refactored.domain.checks;
 
 import refactored.domain.internal_model.ClassData;
-import refactored.datasource.DependencyGraph;
+import refactored.domain.DependencyGraph;
 import refactored.domain.lint_result.LintResult;
 import refactored.domain.lint_result.Severity;
 import java.util.ArrayList;

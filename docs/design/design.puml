@@ -63,6 +63,28 @@ package "Domain Layer" {
         + createService(type: LLMProviderType, apiKey: String): LLMService
         + getAvailableProviders(): List<LLMProviderType>
     }
+    note right of LLMServiceFactory : Simple Factory Pattern:\nCreates LLMService instances
+
+    class DependencyGraph {
+        - graph: Map<String, Set<String>>
+        - adapter: BytecodeAdapter
+        + DependencyGraph(adapter: BytecodeAdapter)
+        + addDependency(from: String, to: String): void
+        + getDependencies(className: String): Set<String>
+        + collectDependencies(classData: ClassData): void
+        + findCycles(): List<List<String>>
+        - dfs(node: String, visited: Set<String>, stack: Set<String>, path: LinkedList<String>, cycles: List<List<String>>): void
+        - extractCycle(path: LinkedList<String>, start: String): List<String>
+        + isConcreteClass(internalName: String): boolean
+        + isUserDefinedClass(internalName: String): boolean
+        - isLibraryClass(internalName: String): boolean
+        - isInterface(internalName: String): boolean
+        - isAbstractClass(internalName: String): boolean
+        - isEnum(internalName: String): boolean
+        - addDependencyFromDescriptor(from: String, descriptor: String): void
+        + clear(): void
+    }
+    note left of DependencyGraph : Shared service:\nUsed by Circular & Concrete\nDependency checks
 
     package "checks" {
         abstract class LintCheck {
@@ -76,6 +98,7 @@ package "Domain Layer" {
             + {abstract} check(classData: ClassData): List<LintResult>
             # createResult(severity: Severity, message: String, location: String): LintResult
         }
+        note right of LintCheck : Strategy Pattern:\nDifferent check algorithms
 
         class TooManyArgumentsCheck {
             - maxArguments: int
@@ -146,6 +169,7 @@ package "Domain Layer" {
             + onCheckPassed(checkName: String, classCount: int): void
             + onAnalysisComplete(totalIssues: int, classCount: int): void
         }
+        note right of LintResultObserver : Observer Pattern:\nUI observes lint results
 
         enum Severity {
             INFO
@@ -162,6 +186,9 @@ package "Domain Layer" {
             - interfaces: List<String>
             - methods: List<MethodData>
             - fields: List<FieldData>
+            - isInterface: boolean
+            - isAbstract: boolean
+            - isEnum: boolean
             + ClassData(className: String)
             + getClassName(): String
             + getSuperName(): String
@@ -172,6 +199,12 @@ package "Domain Layer" {
             + getFields(): List<FieldData>
             + setMethods(methods: List<MethodData>): void
             + setFields(fields: List<FieldData>): void
+            + isInterface(): boolean
+            + setInterface(isInterface: boolean): void
+            + isAbstract(): boolean
+            + setAbstract(isAbstract: boolean): void
+            + isEnum(): boolean
+            + setEnum(isEnum: boolean): void
         }
 
         class MethodData {
@@ -257,38 +290,72 @@ package "Datasource Layer" {
         - extractTextFromResponse(response: Response): String
     }
 
-    class ClassAnalyzer {
-        + analyzeFromPaths(filePaths: List<String>): List<ClassData>
-        + analyzeFromNames(classNames: List<String>): List<ClassData>
-        - parseClassNode(classNode: ClassNode): ClassData
-        - parseMethod(methodNode: MethodNode): MethodData
-        - parseField(fieldNode: FieldNode): FieldData
+    interface BytecodeAdapter {
+        + readClassFromPath(filePath: String): ClassData
+        + readClassFromName(className: String): ClassData
+        + extractTypeReferencesFromDescriptor(descriptor: String): List<String>
+        + isInterface(internalClassName: String): boolean
+        + isAbstractClass(internalClassName: String): boolean
+        + isEnum(internalClassName: String): boolean
+    }
+    note right of BytecodeAdapter : Adapter Pattern:\nAdapts ASM library to our domain model
+
+    class ASMBytecodeAdapter {
+        + readClassFromPath(filePath: String): ClassData
+        + readClassFromName(className: String): ClassData
+        + extractTypeReferencesFromDescriptor(descriptor: String): List<String>
+        + isInterface(internalClassName: String): boolean
+        + isAbstractClass(internalClassName: String): boolean
+        + isEnum(internalClassName: String): boolean
+        - extractClassData(classNode: ClassNode): ClassData
+        - extractMethodData(methodNode: MethodNode): MethodData
+        - extractFieldData(fieldNode: FieldNode): FieldData
+        - extractInstructionData(insn: AbstractInsnNode): InstructionData
     }
 
-    class DependencyGraph {
-        - {static} instance: DependencyGraph
-        - graph: Map<String, Set<String>>
-        - DependencyGraph()
-        + {static} getInstance(): DependencyGraph
-        + addDependency(from: String, to: String): void
-        + getDependencies(className: String): Set<String>
-        + collectDependencies(classData: ClassData): void
-        + findCycles(): List<List<String>>
-        - dfs(node: String, visited: Set<String>, stack: Set<String>, path: LinkedList<String>, cycles: List<List<String>>): void
-        - extractCycle(path: LinkedList<String>, start: String): List<String>
-        + isConcreteClass(internalName: String): boolean
-        + isUserDefinedClass(internalName: String): boolean
-        - isLibraryClass(internalName: String): boolean
-        - isInterface(internalName: String): boolean
-        - isAbstractClass(internalName: String): boolean
-        - isEnum(internalName: String): boolean
-        - addDependencyFromDescriptor(from: String, descriptor: String): void
-        + clear(): void
+    class ClassAnalyzer {
+        - adapter: BytecodeAdapter
+        + ClassAnalyzer()
+        + analyzeFromPaths(filePaths: List<String>): List<ClassData>
+        + analyzeFromNames(classNames: List<String>): List<ClassData>
     }
 
     enum ClassInputType {
         COMPILED_CLASS_PATH
         FULLY_QUALIFIED_NAME
+    }
+}
+
+package "ASM Library (Adaptee)" <<External>> {
+    class ClassNode {
+        + name: String
+        + superName: String
+        + interfaces: List<String>
+        + methods: List<MethodNode>
+        + fields: List<FieldNode>
+    }
+
+    class MethodNode {
+        + name: String
+        + desc: String
+        + access: int
+        + instructions: InsnList
+    }
+
+    class FieldNode {
+        + name: String
+        + desc: String
+        + access: int
+    }
+
+    class MethodInsnNode {
+        + owner: String
+        + name: String
+        + desc: String
+    }
+
+    class AbstractInsnNode {
+        + getOpcode(): int
     }
 }
 
@@ -361,6 +428,12 @@ CircularDependencyCheck --> DependencyGraph
 ConcreteDependencyCheck --|> LintCheck
 ConcreteDependencyCheck --> DependencyGraph
 
+DependencyGraph ..> ClassData
+DependencyGraph ..> FieldData
+DependencyGraph ..> MethodData
+DependencyGraph ..> MethodReference
+DependencyGraph --> BytecodeAdapter
+
 LintResultObserver ..> LintResult
 
 LintResult --> Severity
@@ -376,15 +449,25 @@ MethodReference ..> MethodData
 ' Datasource Layer Relationships
 OpenAILLMService --|> LLMService
 
-ClassAnalyzer ..> ClassData
-ClassAnalyzer ..> MethodData
-ClassAnalyzer ..> FieldData
-ClassAnalyzer ..> InstructionData
-ClassAnalyzer ..> MethodReference
+ASMBytecodeAdapter ..|> BytecodeAdapter
+ASMBytecodeAdapter ..> ClassNode
+ASMBytecodeAdapter ..> MethodNode
+ASMBytecodeAdapter ..> FieldNode
+ASMBytecodeAdapter ..> MethodInsnNode
+ASMBytecodeAdapter ..> AbstractInsnNode
 
-DependencyGraph ..> ClassData
-DependencyGraph ..> FieldData
-DependencyGraph ..> MethodData
-DependencyGraph ..> MethodReference
+ClassAnalyzer --> BytecodeAdapter
+ClassAnalyzer ..> ClassData
+
+BytecodeAdapter ..> FieldData
+BytecodeAdapter ..> MethodData
+BytecodeAdapter ..> InstructionData
+BytecodeAdapter ..> MethodReference
+
+' ASM Library relationships (Adaptee)
+MethodNode --> AbstractInsnNode
+MethodNode --> MethodInsnNode
+ClassNode --> MethodNode
+ClassNode --> FieldNode
 
 @enduml
