@@ -1,14 +1,14 @@
-package refactored.domain;
+package refactored.domain.checks;
 
-import refactored.datasource.internal_model.ClassData;
-import refactored.datasource.DependencyGraph;
-import refactored.presentation.LintResult;
-import refactored.presentation.Severity;
+import refactored.domain.internal_model.ClassData;
+import refactored.domain.DependencyGraph;
+import refactored.domain.lint_result.LintResult;
+import refactored.domain.lint_result.Severity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class ConcreteDependencyCheck extends AbstractLintCheck {
+public class ConcreteDependencyCheck extends LintCheck {
     private DependencyGraph dependencyGraph;
 
     public ConcreteDependencyCheck(DependencyGraph dependencyGraph) {

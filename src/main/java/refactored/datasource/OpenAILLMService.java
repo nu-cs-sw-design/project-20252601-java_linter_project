@@ -1,4 +1,4 @@
-package refactored.datasource.llm;
+package refactored.datasource;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
@@ -6,7 +6,7 @@ import com.openai.models.ChatModel;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 
-public class OpenAILLMService extends AbstractLLMService {
+public class OpenAILLMService extends LLMService {
     private OpenAIClient client;
 
     public OpenAILLMService(String apiKey) {

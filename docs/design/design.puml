@@ -5,21 +5,9 @@ package "Presentation Layer" {
     class Application {
         - ui: UserInterface
         - linter: Linter
-        - config: LinterConfiguration
         + Application(ui: UserInterface)
         + run(): void
         + {static} main(args: String[]): void
-    }
-
-    interface LintResultObserver {
-        + onLintResult(result: LintResult): void
-        + onCheckPassed(checkName: String, classCount: int): void
-        + onAnalysisComplete(totalIssues: int, classCount: int): void
-    }
-
-    enum ClassInputType {
-        COMPILED_CLASS_PATH
-        FULLY_QUALIFIED_NAME
     }
 
     interface UserInterface {
@@ -48,193 +36,39 @@ package "Presentation Layer" {
         + onCheckPassed(checkName: String, classCount: int): void
         + onAnalysisComplete(totalIssues: int, classCount: int): void
     }
-
-    class LintResult {
-        - severity: Severity
-        - message: String
-        - location: String
-        - checkName: String
-        - suggestion: String
-        + LintResult(severity: Severity, message: String, location: String, checkName: String)
-        + getSeverity(): Severity
-        + getMessage(): String
-        + getLocation(): String
-        + getCheckName(): String
-        + getSuggestion(): String
-        + setSuggestion(suggestion: String): void
-        + toString(): String
-    }
-
-    enum Severity {
-        INFO
-        WARNING
-        ERROR
-        CRITICAL
-    }
 }
 
 package "Domain Layer" {
 
     class Linter {
-        - checkRegistry: LintCheckRegistry
         - classAnalyzer: ClassAnalyzer
+        - dependencyGraph: DependencyGraph
         - observers: List<LintResultObserver>
-        + Linter(config: LinterConfiguration)
+        - llmService: LLMService
+        - {static} MAX_ARGUMENTS: int
+        + Linter()
         + addObserver(observer: LintResultObserver): void
         + removeObserver(observer: LintResultObserver): void
         + analyzeFromPaths(filePaths: List<String>, selectedChecks: List<CheckType>): void
         + analyzeFromNames(classNames: List<String>, selectedChecks: List<CheckType>): void
+        + registerLLMService(llmService: LLMService): void
         - runChecks(classDataList: List<ClassData>, selectedChecks: List<CheckType>): void
+        - createCheck(type: CheckType): LintCheck
         - notifyObservers(result: LintResult): void
         - notifyPass(checkName: String, classCount: int): void
         - notifyAnalysisComplete(totalIssues: int, classCount: int): void
     }
 
-    class LinterConfiguration {
-        - maxArguments: int
-        - llmProviderType: LLMProviderType
-        - apiKey: String
-        - enabledChecks: Set<CheckType>
-        + LinterConfiguration()
-        + getMaxArguments(): int
-        + setMaxArguments(max: int): void
-        + getLLMProviderType(): LLMProviderType
-        + setLLMProviderType(type: LLMProviderType): void
-        + getApiKey(): String
-        + setApiKey(apiKey: String): void
-        + getEnabledChecks(): Set<CheckType>
-        + setEnabledChecks(checks: Set<CheckType>): void
-    }
-
-    interface LintCheck {
-        + getName(): String
-        + getDescription(): String
-        + getCheckType(): CheckType
-        + check(classData: ClassData): List<LintResult>
-    }
-
-    abstract class AbstractLintCheck {
-        # checkType: CheckType
-        # name: String
-        # description: String
-        + AbstractLintCheck(checkType: CheckType, name: String, description: String)
-        + getName(): String
-        + getDescription(): String
-        + getCheckType(): CheckType
-        + {abstract} check(classData: ClassData): List<LintResult>
-        # createResult(severity: Severity, message: String, location: String): LintResult
-    }
-
-    class TooManyArgumentsCheck {
-        - maxArguments: int
-        + TooManyArgumentsCheck(maxArguments: int)
-        + check(classData: ClassData): List<LintResult>
-    }
-
-    class ConcreteDependencyCheck {
-        - dependencyGraph: DependencyGraph
-        + ConcreteDependencyCheck(dependencyGraph: DependencyGraph)
-        + check(classData: ClassData): List<LintResult>
-    }
-
-    class PublicNonFinalFieldCheck {
-        + PublicNonFinalFieldCheck()
-        + check(classData: ClassData): List<LintResult>
-    }
-
-    class UnusedPrivateMethodCheck {
-        + UnusedPrivateMethodCheck()
-        + check(classData: ClassData): List<LintResult>
-        - isMethodCalled(targetMethod: MethodData, allMethods: List<MethodData>): boolean
-    }
-
-    class MethodNameAppropriatenessCheck {
-        - llmService: LLMService
-        + MethodNameAppropriatenessCheck(llmService: LLMService)
-        + check(classData: ClassData): List<LintResult>
-        - buildPrompt(method: MethodData): String
-    }
-
-    class CircularDependencyCheck {
-        - dependencyGraph: DependencyGraph
-        + CircularDependencyCheck(dependencyGraph: DependencyGraph)
-        + check(classData: ClassData): List<LintResult>
-        + detectAllCycles(): List<LintResult>
-    }
-
-    class LintCheckRegistry {
-        - {static} instance: LintCheckRegistry
-        - config: LinterConfiguration
-        - llmServiceFactory: LLMServiceFactory
-        - dependencyGraph: DependencyGraph
-        - LintCheckRegistry(config: LinterConfiguration, llmServiceFactory: LLMServiceFactory, dependencyGraph: DependencyGraph)
-        + {static} getInstance(config: LinterConfiguration, llmServiceFactory: LLMServiceFactory, dependencyGraph: DependencyGraph): LintCheckRegistry
-        + createCheck(type: CheckType): LintCheck
-        + getAvailableCheckTypes(): List<CheckType>
-    }
-
-    enum CheckType {
-        TOO_MANY_ARGUMENTS
-        PUBLIC_NON_FINAL_FIELD
-        UNUSED_PRIVATE_METHOD
-        METHOD_NAME_APPROPRIATENESS
-        CIRCULAR_DEPENDENCY
-        CONCRETE_DEPENDENCY
-    }
-}
-
-package "Datasource Layer" {
-
-    interface LLMService {
-        + getResponse(prompt: String): String
-        + getProviderName(): String
-        + isAvailable(): boolean
-    }
-
     class LLMServiceFactory {
-        - {static} instance: LLMServiceFactory
-        - LLMServiceFactory()
-        + {static} getInstance(): LLMServiceFactory
         + createService(type: LLMProviderType, apiKey: String): LLMService
         + getAvailableProviders(): List<LLMProviderType>
     }
-
-    enum LLMProviderType {
-        OPENAI
-    }
-
-    abstract class AbstractLLMService {
-        # apiKey: String
-        # baseUrl: String
-        # timeout: int
-        + AbstractLLMService(apiKey: String)
-        + {abstract} getResponse(prompt: String): String
-        + {abstract} getProviderName(): String
-        + isAvailable(): boolean
-        # handleError(e: Exception): String
-    }
-
-    class OpenAILLMService {
-        - client: OpenAIClient
-        + OpenAILLMService(apiKey: String)
-        + getResponse(prompt: String): String
-        + getProviderName(): String
-        - extractTextFromResponse(response: Response): String
-    }
-
-    class ClassAnalyzer {
-        + analyzeFromPaths(filePaths: List<String>): List<ClassData>
-        + analyzeFromNames(classNames: List<String>): List<ClassData>
-        - parseClassNode(classNode: ClassNode): ClassData
-        - parseMethod(methodNode: MethodNode): MethodData
-        - parseField(fieldNode: FieldNode): FieldData
-    }
+    note right of LLMServiceFactory : Simple Factory Pattern:\nCreates LLMService instances
 
     class DependencyGraph {
-        - {static} instance: DependencyGraph
         - graph: Map<String, Set<String>>
-        - DependencyGraph()
-        + {static} getInstance(): DependencyGraph
+        - adapter: BytecodeAdapter
+        + DependencyGraph(adapter: BytecodeAdapter)
         + addDependency(from: String, to: String): void
         + getDependencies(className: String): Set<String>
         + collectDependencies(classData: ClassData): void
@@ -250,125 +84,390 @@ package "Datasource Layer" {
         - addDependencyFromDescriptor(from: String, descriptor: String): void
         + clear(): void
     }
+    note left of DependencyGraph : Shared service:\nUsed by Circular & Concrete\nDependency checks
 
-    class ClassData {
-        - className: String
-        - superName: String
-        - interfaces: List<String>
-        - methods: List<MethodData>
-        - fields: List<FieldData>
-        + ClassData(className: String)
-        + getClassName(): String
-        + getSuperName(): String
-        + setSuperName(superName: String): void
-        + getInterfaces(): List<String>
-        + setInterfaces(interfaces: List<String>): void
-        + getMethods(): List<MethodData>
-        + getFields(): List<FieldData>
-        + setMethods(methods: List<MethodData>): void
-        + setFields(fields: List<FieldData>): void
+    package "checks" {
+        abstract class LintCheck {
+            # checkType: CheckType
+            # name: String
+            # description: String
+            + LintCheck(checkType: CheckType, name: String, description: String)
+            + getName(): String
+            + getDescription(): String
+            + getCheckType(): CheckType
+            + {abstract} check(classData: ClassData): List<LintResult>
+            # createResult(severity: Severity, message: String, location: String): LintResult
+        }
+        note right of LintCheck : Strategy Pattern:\nDifferent check algorithms
+
+        class TooManyArgumentsCheck {
+            - maxArguments: int
+            + TooManyArgumentsCheck(maxArguments: int)
+            + check(classData: ClassData): List<LintResult>
+        }
+
+        class ConcreteDependencyCheck {
+            - dependencyGraph: DependencyGraph
+            + ConcreteDependencyCheck(dependencyGraph: DependencyGraph)
+            + check(classData: ClassData): List<LintResult>
+        }
+
+        class PublicNonFinalFieldCheck {
+            + PublicNonFinalFieldCheck()
+            + check(classData: ClassData): List<LintResult>
+        }
+
+        class UnusedPrivateMethodCheck {
+            + UnusedPrivateMethodCheck()
+            + check(classData: ClassData): List<LintResult>
+            - isMethodCalled(targetMethod: MethodData, allMethods: List<MethodData>): boolean
+        }
+
+        class MethodNameAppropriatenessCheck {
+            - llmService: LLMService
+            + MethodNameAppropriatenessCheck(llmService: LLMService)
+            + check(classData: ClassData): List<LintResult>
+            - buildPrompt(method: MethodData): String
+        }
+
+        class CircularDependencyCheck {
+            - dependencyGraph: DependencyGraph
+            + CircularDependencyCheck(dependencyGraph: DependencyGraph)
+            + check(classData: ClassData): List<LintResult>
+            + detectAllCycles(): List<LintResult>
+        }
+
+        enum CheckType {
+            TOO_MANY_ARGUMENTS
+            PUBLIC_NON_FINAL_FIELD
+            UNUSED_PRIVATE_METHOD
+            METHOD_NAME_APPROPRIATENESS
+            CIRCULAR_DEPENDENCY
+            CONCRETE_DEPENDENCY
+        }
     }
 
-    class MethodData {
-        - name: String
-        - descriptor: String
-        - accessFlags: int
-        - returnType: String
-        - parameterTypes: List<String>
-        - instructions: List<InstructionData>
-        - calledMethods: List<MethodReference>
-        + MethodData(name: String, descriptor: String, accessFlags: int)
-        + getName(): String
-        + getDescriptor(): String
-        + isPrivate(): boolean
-        + isPublic(): boolean
-        + isStatic(): boolean
-        + isConstructor(): boolean
-        + getReturnType(): String
-        + getParameterTypes(): List<String>
-        + getParameterCount(): int
-        + getCalledMethods(): List<MethodReference>
-        + addCalledMethod(methodRef: MethodReference): void
-        + getInstructions(): List<InstructionData>
-        + addInstruction(instruction: InstructionData): void
+    package "lint_result" {
+        class LintResult {
+            - severity: Severity
+            - message: String
+            - location: String
+            - checkName: String
+            - suggestion: String
+            + LintResult(severity: Severity, message: String, location: String, checkName: String)
+            + getSeverity(): Severity
+            + getMessage(): String
+            + getLocation(): String
+            + getCheckName(): String
+            + getSuggestion(): String
+            + setSuggestion(suggestion: String): void
+            + toString(): String
+        }
+
+        interface LintResultObserver {
+            + onLintResult(result: LintResult): void
+            + onCheckPassed(checkName: String, classCount: int): void
+            + onAnalysisComplete(totalIssues: int, classCount: int): void
+        }
+        note right of LintResultObserver : Observer Pattern:\nUI observes lint results
+
+        enum Severity {
+            INFO
+            WARNING
+            ERROR
+            CRITICAL
+        }
     }
 
-    class FieldData {
-        - name: String
-        - descriptor: String
-        - accessFlags: int
-        + FieldData(name: String, descriptor: String, accessFlags: int)
-        + getName(): String
-        + getDescriptor(): String
-        + isPublic(): boolean
-        + isPrivate(): boolean
-        + isFinal(): boolean
-        + isStatic(): boolean
-    }
+    package "internal_model" {
+        class ClassData {
+            - className: String
+            - superName: String
+            - interfaces: List<String>
+            - methods: List<MethodData>
+            - fields: List<FieldData>
+            - isInterface: boolean
+            - isAbstract: boolean
+            - isEnum: boolean
+            + ClassData(className: String)
+            + getClassName(): String
+            + getSuperName(): String
+            + setSuperName(superName: String): void
+            + getInterfaces(): List<String>
+            + setInterfaces(interfaces: List<String>): void
+            + getMethods(): List<MethodData>
+            + getFields(): List<FieldData>
+            + setMethods(methods: List<MethodData>): void
+            + setFields(fields: List<FieldData>): void
+            + isInterface(): boolean
+            + setInterface(isInterface: boolean): void
+            + isAbstract(): boolean
+            + setAbstract(isAbstract: boolean): void
+            + isEnum(): boolean
+            + setEnum(isEnum: boolean): void
+        }
 
-    class MethodReference {
-        - owner: String
-        - name: String
-        - descriptor: String
-        + MethodReference(owner: String, name: String, descriptor: String)
-        + getOwner(): String
-        + getName(): String
-        + getDescriptor(): String
-        + matches(method: MethodData): boolean
-    }
+        class MethodData {
+            - name: String
+            - descriptor: String
+            - accessFlags: int
+            - returnType: String
+            - parameterTypes: List<String>
+            - instructions: List<InstructionData>
+            - calledMethods: List<MethodReference>
+            + MethodData(name: String, descriptor: String, accessFlags: int, returnType: String, parameterTypes: List<String>)
+            + getName(): String
+            + getDescriptor(): String
+            + isPrivate(): boolean
+            + isPublic(): boolean
+            + isStatic(): boolean
+            + isConstructor(): boolean
+            + getReturnType(): String
+            + getParameterTypes(): List<String>
+            + getParameterCount(): int
+            + getCalledMethods(): List<MethodReference>
+            + addCalledMethod(methodRef: MethodReference): void
+            + getInstructions(): List<InstructionData>
+            + addInstruction(instruction: InstructionData): void
+        }
 
-    class InstructionData {
-        - opcode: int
-        - textRepresentation: String
-        + InstructionData(opcode: int, textRepresentation: String)
-        + getOpcode(): int
-        + getTextRepresentation(): String
+        class FieldData {
+            - name: String
+            - descriptor: String
+            - accessFlags: int
+            + FieldData(name: String, descriptor: String, accessFlags: int)
+            + getName(): String
+            + getDescriptor(): String
+            + isPublic(): boolean
+            + isPrivate(): boolean
+            + isFinal(): boolean
+            + isStatic(): boolean
+        }
+
+        class MethodReference {
+            - owner: String
+            - name: String
+            - descriptor: String
+            + MethodReference(owner: String, name: String, descriptor: String)
+            + getOwner(): String
+            + getName(): String
+            + getDescriptor(): String
+            + matches(method: MethodData): boolean
+        }
+
+        class InstructionData {
+            - opcode: int
+            - textRepresentation: String
+            + InstructionData(opcode: int, textRepresentation: String)
+            + getOpcode(): int
+            + getTextRepresentation(): String
+        }
     }
 }
 
+package "Datasource Layer" {
+
+    abstract class LLMService {
+        # apiKey: String
+        # baseUrl: String
+        # timeout: int
+        + LLMService(apiKey: String)
+        + {abstract} getResponse(prompt: String): String
+        + {abstract} getProviderName(): String
+        + isAvailable(): boolean
+        # handleError(e: Exception): String
+    }
+
+    enum LLMProviderType {
+        OPENAI
+    }
+
+    class OpenAILLMService {
+        - client: OpenAIClient
+        + OpenAILLMService(apiKey: String)
+        + getResponse(prompt: String): String
+        + getProviderName(): String
+        - extractTextFromResponse(response: Response): String
+    }
+
+    interface BytecodeAdapter {
+        + readClassFromPath(filePath: String): ClassData
+        + readClassFromName(className: String): ClassData
+        + extractTypeReferencesFromDescriptor(descriptor: String): List<String>
+        + isInterface(internalClassName: String): boolean
+        + isAbstractClass(internalClassName: String): boolean
+        + isEnum(internalClassName: String): boolean
+    }
+    note right of BytecodeAdapter : Adapter Pattern:\nAdapts ASM library to our domain model
+
+    class ASMBytecodeAdapter {
+        + readClassFromPath(filePath: String): ClassData
+        + readClassFromName(className: String): ClassData
+        + extractTypeReferencesFromDescriptor(descriptor: String): List<String>
+        + isInterface(internalClassName: String): boolean
+        + isAbstractClass(internalClassName: String): boolean
+        + isEnum(internalClassName: String): boolean
+        - extractClassData(classNode: ClassNode): ClassData
+        - extractMethodData(methodNode: MethodNode): MethodData
+        - extractFieldData(fieldNode: FieldNode): FieldData
+        - extractInstructionData(insn: AbstractInsnNode): InstructionData
+    }
+
+    class ClassAnalyzer {
+        - adapter: BytecodeAdapter
+        + ClassAnalyzer()
+        + analyzeFromPaths(filePaths: List<String>): List<ClassData>
+        + analyzeFromNames(classNames: List<String>): List<ClassData>
+    }
+
+    enum ClassInputType {
+        COMPILED_CLASS_PATH
+        FULLY_QUALIFIED_NAME
+    }
+}
+
+package "ASM Library (Adaptee)" <<External>> {
+    class ClassNode {
+        + name: String
+        + superName: String
+        + interfaces: List<String>
+        + methods: List<MethodNode>
+        + fields: List<FieldNode>
+    }
+
+    class MethodNode {
+        + name: String
+        + desc: String
+        + access: int
+        + instructions: InsnList
+    }
+
+    class FieldNode {
+        + name: String
+        + desc: String
+        + access: int
+    }
+
+    class MethodInsnNode {
+        + owner: String
+        + name: String
+        + desc: String
+    }
+
+    class AbstractInsnNode {
+        + getOpcode(): int
+    }
+}
+
+' Presentation Layer Relationships
 Application --> UserInterface
 Application --> Linter
-Application --> LinterConfiguration
+Application ..> CheckType
+Application ..> LLMServiceFactory
+Application ..> LLMProviderType
+Application ..> LLMService
+Application ..> ClassInputType
+Application ..> CLIUserInterface
+Application ..> LintResultObserver
+
 CLIUserInterface ..|> UserInterface
 CLIUserInterface ..|> LintResultObserver
-LintResult --> Severity
+CLIUserInterface ..> LintResult
+CLIUserInterface ..> CheckType
+CLIUserInterface ..> LLMProviderType
+CLIUserInterface ..> ClassInputType
+
 UserInterface ..> ClassInputType
-
-AbstractLintCheck ..|> LintCheck
-TooManyArgumentsCheck --|> AbstractLintCheck
-PublicNonFinalFieldCheck --|> AbstractLintCheck
-UnusedPrivateMethodCheck --|> AbstractLintCheck
-MethodNameAppropriatenessCheck --|> AbstractLintCheck
-CircularDependencyCheck --|> AbstractLintCheck
-ConcreteDependencyCheck --|> AbstractLintCheck
-ConcreteDependencyCheck --> DependencyGraph
-LintCheckRegistry ..> LintCheck
-Linter --> LintCheckRegistry
-Linter --> ClassAnalyzer
-
-AbstractLLMService ..|> LLMService
-OpenAILLMService --|> AbstractLLMService
-LLMServiceFactory ..> LLMService
-LLMServiceFactory ..> LLMProviderType
-ClassAnalyzer ..> ClassData
-ClassData --> MethodData
-ClassData --> FieldData
-MethodData --> MethodReference
-MethodData --> InstructionData
-DependencyGraph ..> ClassData
-
-Linter --> LintResultObserver
 UserInterface ..> CheckType
 UserInterface ..> LLMProviderType
 
+' Domain Layer Relationships
+Linter --> ClassAnalyzer
+Linter --> DependencyGraph
+Linter --> LintResultObserver
+Linter --> LLMService
+Linter ..> CheckType
+Linter ..> ClassData
+Linter ..> CircularDependencyCheck
+Linter ..> LintCheck
+Linter ..> LintResult
+Linter ..> Severity
+Linter ..> TooManyArgumentsCheck
+Linter ..> PublicNonFinalFieldCheck
+Linter ..> UnusedPrivateMethodCheck
+Linter ..> MethodNameAppropriatenessCheck
+Linter ..> ConcreteDependencyCheck
+
+LLMServiceFactory ..> LLMService
+LLMServiceFactory ..> LLMProviderType
+LLMServiceFactory ..> OpenAILLMService
+
+LintCheck ..> CheckType
 LintCheck ..> ClassData
 LintCheck ..> LintResult
+LintCheck ..> Severity
+
+TooManyArgumentsCheck --|> LintCheck
+TooManyArgumentsCheck ..> MethodData
+
+PublicNonFinalFieldCheck --|> LintCheck
+PublicNonFinalFieldCheck ..> FieldData
+
+UnusedPrivateMethodCheck --|> LintCheck
+UnusedPrivateMethodCheck ..> MethodData
+UnusedPrivateMethodCheck ..> MethodReference
+
+MethodNameAppropriatenessCheck --|> LintCheck
 MethodNameAppropriatenessCheck --> LLMService
+MethodNameAppropriatenessCheck ..> MethodData
+MethodNameAppropriatenessCheck ..> InstructionData
+
+CircularDependencyCheck --|> LintCheck
 CircularDependencyCheck --> DependencyGraph
-LintCheckRegistry --> LinterConfiguration
-LintCheckRegistry --> LLMServiceFactory
-LintCheckRegistry --> DependencyGraph
-LinterConfiguration --> LLMProviderType
-LinterConfiguration --> CheckType
+
+ConcreteDependencyCheck --|> LintCheck
+ConcreteDependencyCheck --> DependencyGraph
+
+DependencyGraph ..> ClassData
+DependencyGraph ..> FieldData
+DependencyGraph ..> MethodData
+DependencyGraph ..> MethodReference
+DependencyGraph --> BytecodeAdapter
+
+LintResultObserver ..> LintResult
+
+LintResult --> Severity
+
+ClassData --> MethodData
+ClassData --> FieldData
+
+MethodData --> MethodReference
+MethodData --> InstructionData
+
+MethodReference ..> MethodData
+
+' Datasource Layer Relationships
+OpenAILLMService --|> LLMService
+
+ASMBytecodeAdapter ..|> BytecodeAdapter
+ASMBytecodeAdapter ..> ClassNode
+ASMBytecodeAdapter ..> MethodNode
+ASMBytecodeAdapter ..> FieldNode
+ASMBytecodeAdapter ..> MethodInsnNode
+ASMBytecodeAdapter ..> AbstractInsnNode
+
+ClassAnalyzer --> BytecodeAdapter
+ClassAnalyzer ..> ClassData
+
+BytecodeAdapter ..> FieldData
+BytecodeAdapter ..> MethodData
+BytecodeAdapter ..> InstructionData
+BytecodeAdapter ..> MethodReference
+
+' ASM Library relationships (Adaptee)
+MethodNode --> AbstractInsnNode
+MethodNode --> MethodInsnNode
+ClassNode --> MethodNode
+ClassNode --> FieldNode
 
 @enduml

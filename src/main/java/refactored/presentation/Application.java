@@ -1,21 +1,22 @@
 package refactored.presentation;
 
-import refactored.datasource.llm.LLMProviderType;
-import refactored.datasource.llm.LLMServiceFactory;
-import refactored.domain.CheckType;
+import refactored.datasource.ClassInputType;
+import refactored.datasource.LLMProviderType;
+import refactored.datasource.LLMService;
+import refactored.domain.LLMServiceFactory;
+import refactored.domain.checks.CheckType;
 import refactored.domain.Linter;
-import refactored.domain.LinterConfiguration;
+import refactored.domain.lint_result.LintResultObserver;
+
 import java.util.List;
 
 public class Application {
     private UserInterface ui;
     private Linter linter;
-    private LinterConfiguration config;
 
     public Application(UserInterface ui) {
         this.ui = ui;
-        this.config = new LinterConfiguration();
-        this.linter = new Linter(config);
+        this.linter = new Linter();
     }
 
     public void run() {
@@ -27,15 +28,13 @@ public class Application {
         List<CheckType> selectedChecks = ui.promptForChecks(availableChecks);
 
         if (selectedChecks.contains(CheckType.METHOD_NAME_APPROPRIATENESS)) {
-            LLMServiceFactory factory = LLMServiceFactory.getInstance();
+            LLMServiceFactory factory = new LLMServiceFactory();
             List<LLMProviderType> providers = factory.getAvailableProviders();
             LLMProviderType provider = ui.promptForLLMProvider(providers);
 
-            if (provider != null) {
-                String apiKey = ui.promptForApiKey(provider);
-                config.setLLMProviderType(provider);
-                config.setApiKey(apiKey);
-            }
+            String apiKey = ui.promptForApiKey(provider);
+            LLMService llmService = factory.createService(provider, apiKey);
+            linter.registerLLMService(llmService);
         }
 
         if (ui instanceof LintResultObserver) {

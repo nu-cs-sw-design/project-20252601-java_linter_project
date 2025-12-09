@@ -1,7 +1,11 @@
 package refactored.presentation;
 
-import refactored.datasource.llm.LLMProviderType;
-import refactored.domain.CheckType;
+import refactored.datasource.ClassInputType;
+import refactored.datasource.LLMProviderType;
+import refactored.domain.checks.CheckType;
+import refactored.domain.lint_result.LintResult;
+import refactored.domain.lint_result.LintResultObserver;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
