@@ -1,9 +1,9 @@
 package refactored.datasource;
 
-import refactored.datasource.internal_model.FieldData;
-import refactored.datasource.internal_model.ClassData;
-import refactored.datasource.internal_model.MethodData;
-import refactored.datasource.internal_model.MethodReference;
+import refactored.domain.internal_model.FieldData;
+import refactored.domain.internal_model.ClassData;
+import refactored.domain.internal_model.MethodData;
+import refactored.domain.internal_model.MethodReference;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;

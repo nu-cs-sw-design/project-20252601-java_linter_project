@@ -1,7 +1,7 @@
 package refactored.domain;
 
-import refactored.datasource.internal_model.ClassData;
-import refactored.datasource.internal_model.MethodData;
+import refactored.domain.internal_model.ClassData;
+import refactored.domain.internal_model.MethodData;
 import refactored.presentation.LintResult;
 import refactored.presentation.Severity;
 import java.util.ArrayList;
