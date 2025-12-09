@@ -1,10 +1,12 @@
-package refactored.datasource.internal_model;
+package refactored.datasource;
 
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import org.objectweb.asm.util.Printer;
 import org.objectweb.asm.util.Textifier;
 import org.objectweb.asm.util.TraceMethodVisitor;
+import refactored.domain.internal_model.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -70,10 +72,21 @@ public class ClassAnalyzer {
     }
 
     private MethodData parseMethod(MethodNode methodNode) {
+        String descriptor = methodNode.desc;
+        Type returnTypeObj = Type.getReturnType(descriptor);
+        String returnType = returnTypeObj.getClassName();
+
+        Type[] argTypes = Type.getArgumentTypes(descriptor);
+        List<String> parameterTypes = new ArrayList<>();
+        for (Type argType : argTypes) {
+            parameterTypes.add(argType.getClassName());
+        }
         MethodData methodData = new MethodData(
                 methodNode.name,
-                methodNode.desc,
-                methodNode.access
+                descriptor,
+                methodNode.access,
+                returnType,
+                parameterTypes
         );
 
         InsnList instructions = methodNode.instructions;

@@ -1,4 +1,4 @@
-package refactored.datasource.internal_model;
+package refactored.domain.internal_model;
 
 public class MethodReference {
     private String owner;

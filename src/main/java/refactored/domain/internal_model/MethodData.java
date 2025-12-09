@@ -1,7 +1,7 @@
-package refactored.datasource.internal_model;
+package refactored.domain.internal_model;
 
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,21 +14,14 @@ public class MethodData {
     private List<InstructionData> instructions;
     private List<MethodReference> calledMethods;
 
-    public MethodData(String name, String descriptor, int accessFlags) {
+    public MethodData(String name, String descriptor, int accessFlags, String returnType, List<String> parameterTypes) {
         this.name = name;
         this.descriptor = descriptor;
         this.accessFlags = accessFlags;
         this.instructions = new ArrayList<>();
         this.calledMethods = new ArrayList<>();
-
-        Type returnTypeObj = Type.getReturnType(descriptor);
-        this.returnType = returnTypeObj.getClassName();
-
-        Type[] argTypes = Type.getArgumentTypes(descriptor);
-        this.parameterTypes = new ArrayList<>();
-        for (Type argType : argTypes) {
-            parameterTypes.add(argType.getClassName());
-        }
+        this.returnType = returnType;
+        this.parameterTypes = parameterTypes;
     }
 
     public String getName() {

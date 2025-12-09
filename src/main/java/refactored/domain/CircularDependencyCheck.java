@@ -1,6 +1,6 @@
 package refactored.domain;
 
-import refactored.datasource.internal_model.ClassData;
+import refactored.domain.internal_model.ClassData;
 import refactored.datasource.DependencyGraph;
 import refactored.presentation.LintResult;
 import refactored.presentation.Severity;

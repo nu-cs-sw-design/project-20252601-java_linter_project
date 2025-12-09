@@ -1,7 +1,7 @@
 package refactored.domain;
 
-import refactored.datasource.internal_model.ClassAnalyzer;
-import refactored.datasource.internal_model.ClassData;
+import refactored.datasource.ClassAnalyzer;
+import refactored.domain.internal_model.ClassData;
 import refactored.datasource.DependencyGraph;
 import refactored.datasource.llm.LLMService;
 import refactored.presentation.LintResult;
