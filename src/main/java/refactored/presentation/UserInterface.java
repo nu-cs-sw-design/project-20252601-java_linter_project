@@ -1,5 +1,6 @@
 package refactored.presentation;
 
+import refactored.datasource.ClassInputType;
 import refactored.datasource.LLMProviderType;
 import refactored.domain.checks.CheckType;
 import java.util.List;

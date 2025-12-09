@@ -5,8 +5,10 @@ import refactored.domain.checks.*;
 import refactored.domain.internal_model.ClassData;
 import refactored.datasource.DependencyGraph;
 import refactored.datasource.LLMService;
-import refactored.presentation.LintResult;
-import refactored.presentation.LintResultObserver;
+import refactored.domain.lint_result.LintResult;
+import refactored.domain.lint_result.LintResultObserver;
+import refactored.domain.lint_result.Severity;
+
 import java.io.IOException;
 import java.util.*;
 
@@ -37,7 +39,7 @@ public class Linter {
             runChecks(classDataList, selectedChecks);
         } catch (IOException e) {
             notifyObservers(new LintResult(
-                    refactored.presentation.Severity.ERROR,
+                    Severity.ERROR,
                     "Failed to analyze files: " + e.getMessage(),
                     "",
                     "System"
@@ -51,7 +53,7 @@ public class Linter {
             runChecks(classDataList, selectedChecks);
         } catch (IOException e) {
             notifyObservers(new LintResult(
-                    refactored.presentation.Severity.ERROR,
+                    Severity.ERROR,
                     "Failed to analyze classes: " + e.getMessage(),
                     "",
                     "System"

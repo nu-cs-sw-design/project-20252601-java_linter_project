@@ -1,10 +1,12 @@
 package refactored.presentation;
 
+import refactored.datasource.ClassInputType;
 import refactored.datasource.LLMProviderType;
 import refactored.datasource.LLMService;
 import refactored.domain.LLMServiceFactory;
 import refactored.domain.checks.CheckType;
 import refactored.domain.Linter;
+import refactored.domain.lint_result.LintResultObserver;
 
 import java.util.List;
 

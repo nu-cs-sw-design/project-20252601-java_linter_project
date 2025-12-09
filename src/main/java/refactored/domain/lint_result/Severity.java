@@ -1,4 +1,4 @@
-package refactored.presentation;
+package refactored.domain.lint_result;
 
 public enum Severity {
     INFO,

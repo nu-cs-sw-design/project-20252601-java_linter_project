@@ -3,8 +3,8 @@ package refactored.domain.checks;
 import refactored.domain.internal_model.ClassData;
 import refactored.domain.internal_model.MethodData;
 import refactored.domain.internal_model.MethodReference;
-import refactored.presentation.LintResult;
-import refactored.presentation.Severity;
+import refactored.domain.lint_result.LintResult;
+import refactored.domain.lint_result.Severity;
 import java.util.ArrayList;
 import java.util.List;
 
