@@ -15,7 +15,7 @@ public class LLMServiceFactory {
         return instance;
     }
 
-    public LLMService createService(LLMProviderType type, String apiKey) {
+    public AbstractLLMService createService(LLMProviderType type, String apiKey) {
         switch (type) {
             case OPENAI:
                 return new OpenAILLMService(apiKey);

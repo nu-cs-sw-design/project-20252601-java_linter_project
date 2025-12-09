@@ -1,7 +1,7 @@
 package refactored.domain;
 
 import refactored.datasource.DependencyGraph;
-import refactored.datasource.llm.LLMService;
+import refactored.datasource.llm.AbstractLLMService;
 import refactored.datasource.llm.LLMServiceFactory;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +41,7 @@ public class LintCheckRegistry {
                 return new UnusedPrivateMethodCheck();
 
             case METHOD_NAME_APPROPRIATENESS:
-                LLMService llmService = null;
+                AbstractLLMService llmService = null;
                 if (config.getLLMProviderType() != null && config.getApiKey() != null) {
                     llmService = llmServiceFactory.createService(
                             config.getLLMProviderType(),

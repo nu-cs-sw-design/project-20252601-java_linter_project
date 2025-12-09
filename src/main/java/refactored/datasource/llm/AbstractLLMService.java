@@ -1,6 +1,6 @@
 package refactored.datasource.llm;
 
-public abstract class AbstractLLMService implements LLMService {
+public abstract class AbstractLLMService {
     protected String apiKey;
     protected String baseUrl;
     protected int timeout;
@@ -10,13 +10,10 @@ public abstract class AbstractLLMService implements LLMService {
         this.timeout = 30000;
     }
 
-    @Override
     public abstract String getResponse(String prompt);
 
-    @Override
     public abstract String getProviderName();
 
-    @Override
     public boolean isAvailable() {
         return apiKey != null && !apiKey.isEmpty();
     }

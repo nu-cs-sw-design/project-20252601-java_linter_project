@@ -2,7 +2,7 @@ package refactored.domain;
 
 import refactored.datasource.internal_model.ClassData;
 import refactored.datasource.internal_model.InstructionData;
-import refactored.datasource.llm.LLMService;
+import refactored.datasource.llm.AbstractLLMService;
 import refactored.datasource.internal_model.MethodData;
 import refactored.presentation.LintResult;
 import refactored.presentation.Severity;
@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MethodNameAppropriatenessCheck extends AbstractLintCheck {
-    private LLMService llmService;
+    private AbstractLLMService llmService;
 
-    public MethodNameAppropriatenessCheck(LLMService llmService) {
+    public MethodNameAppropriatenessCheck(AbstractLLMService llmService) {
         super(CheckType.METHOD_NAME_APPROPRIATENESS,
               "Method Name Appropriateness",
               "Uses LLM to check if method names appropriately describe their behavior");
